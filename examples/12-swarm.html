@@ -1,3 +1,32 @@
+<!--
+    ============================================================================
+    ARCHIVO: 12-swarm.html
+    ============================================================================
+    
+    PROPÓSITO:
+    Demuestra gráficos de enjambre (swarm plots) que distribuyen puntos
+    evitando colisiones usando simulaciones de fuerza de D3.js.
+    
+    CARACTERÍSTICAS:
+    - Puntos distribuidos verticalmente por categoría
+    - Simulación de fuerza para evitar solapamientos
+    - Box plots superpuestos (Q1, mediana, Q3)
+    - Líneas de media y mediana
+    - Tooltips interactivos con estadísticas
+    - Animaciones suaves
+    
+    CONCEPTOS CLAVE:
+    - d3.forceSimulation(): Simulación de física para posicionar puntos
+    - .forceX()/.forceY(): Fuerzas que atraen puntos a posiciones
+    - .forceCollide(): Fuerza que evita colisiones entre puntos
+    - calculateStats(): Calcula estadísticas descriptivas
+    
+    DATOS:
+    - swarmData: Array de {category, value}
+    - Se generan más datos dinámicamente para gráfico más completo
+    
+    ============================================================================
+-->
 <!DOCTYPE html>
 <html lang="es">
 <head>

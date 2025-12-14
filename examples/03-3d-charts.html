@@ -1,3 +1,44 @@
+<!--
+    ============================================================================
+    ARCHIVO: 03-3d-charts.html
+    ============================================================================
+    
+    PROPÓSITO:
+    Demuestra gráficos 3D usando Three.js combinado con D3.js para escalas
+    y colores. Muestra múltiples tipos de visualizaciones 3D.
+    
+    GRÁFICOS INCLUIDOS:
+    1. Barras 3D: Barras en espacio 3D
+    2. Superficie 3D: Superficie de malla con colores basados en altura
+    3. Dispersión 3D: Puntos en espacio 3D
+    4. Superficie desde datos reales: Superficie generada desde datos
+    5. Mapa de Calor 3D: Superficie con colores según intensidad
+    6. Histograma 3D: Barras 3D para distribución de frecuencias
+    7. Boxplot 3D: Diagramas de caja en 3D
+    8. Pareto 3D: Gráfico de Pareto con dimensión Z
+    9. Cascada 3D: Gráfico de cascada en 3D
+    10. KDE 3D: Superficie de densidad de probabilidad
+    11. Radar 3D: Gráfico de radar en 3D
+    
+    CONCEPTOS CLAVE:
+    - Three.js: Scene, Camera, Renderer para renderizado 3D
+    - BufferGeometry: Geometría eficiente para muchos vértices
+    - MeshPhongMaterial: Material con iluminación y colores de vértices
+    - Vertex Colors: Colores por vértice para gradientes
+    - computeVertexNormals(): Calcula normales para iluminación correcta
+    - OrbitControls: Controles de cámara interactivos
+    
+    DEPENDENCIAS EXTERNAS:
+    - Three.js r128 (CDN)
+    - OrbitControls (CDN)
+    
+    NOTAS TÉCNICAS:
+    - Los colores se aplican por vértice usando vertexColors: true
+    - flatShading: false permite interpolación suave de colores
+    - Las superficies se crean triangulando puntos de datos
+    
+    ============================================================================
+-->
 <!DOCTYPE html>
 <html lang="es">
 <head>

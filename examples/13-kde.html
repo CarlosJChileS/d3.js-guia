@@ -1,3 +1,32 @@
+<!--
+    ============================================================================
+    ARCHIVO: 13-kde.html
+    ============================================================================
+    
+    PROPÓSITO:
+    Demuestra gráficos de densidad KDE (Kernel Density Estimation) que
+    estiman la función de densidad de probabilidad de una distribución.
+    
+    CARACTERÍSTICAS:
+    - Curva suave que estima la densidad de probabilidad
+    - Área bajo la curva = 1 (probabilidad total)
+    - Comparación de múltiples distribuciones superpuestas
+    
+    CONCEPTOS CLAVE:
+    - Kernel gaussiano: Función de suavizado
+    - Bandwidth: Ancho del kernel (controla suavizado)
+    - scottBandwidth: Función personalizada para calcular bandwidth óptimo
+    - Integración: El área bajo la curva debe ser 1
+    
+    TÉCNICAS:
+    - Cálculo manual de KDE usando kernel gaussiano
+    - Normalización para que el área sea 1
+    
+    DATOS:
+    - kdeData: Objeto con distribuciones como claves y arrays de números
+    
+    ============================================================================
+-->
 <!DOCTYPE html>
 <html lang="es">
 <head>

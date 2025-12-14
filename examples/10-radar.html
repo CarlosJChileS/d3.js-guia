@@ -1,3 +1,33 @@
+<!--
+    ============================================================================
+    ARCHIVO: 10-radar.html
+    ============================================================================
+    
+    PROPÓSITO:
+    Demuestra gráficos de radar (spider charts) que visualizan datos
+    multidimensionales en forma de polígono radial.
+    
+    CARACTERÍSTICAS:
+    - Ejes radiales: Cada dimensión tiene su propio eje desde el centro
+    - Polígono: Conecta los valores de cada dimensión
+    - Área rellena: Opcional, muestra el área cubierta
+    - Niveles concéntricos: Círculos de referencia para valores
+    
+    TÉCNICAS:
+    - Coordenadas polares: Conversión de ángulos y radios a (x, y)
+    - d3.lineRadial(): Generador de líneas en coordenadas polares
+    - Transformaciones: Rotación y escalado para posicionar dimensiones
+    
+    USOS:
+    - Comparar múltiples series en las mismas dimensiones
+    - Visualizar perfiles multidimensionales
+    - Análisis de rendimiento en múltiples métricas
+    
+    DATOS:
+    - radarData: Objeto con series como claves y objetos de dimensiones
+    
+    ============================================================================
+-->
 <!DOCTYPE html>
 <html lang="es">
 <head>

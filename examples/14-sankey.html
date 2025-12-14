@@ -1,3 +1,34 @@
+<!--
+    ============================================================================
+    ARCHIVO: 14-sankey.html
+    ============================================================================
+    
+    PROPÓSITO:
+    Demuestra diagramas de Sankey que visualizan flujos de datos entre
+    nodos (fuentes y destinos). El ancho de los enlaces es proporcional al valor.
+    
+    CARACTERÍSTICAS:
+    - Nodos: Fuentes y destinos
+    - Enlaces: Flujos entre nodos con ancho proporcional al valor
+    - Colores: Gradientes que conectan colores de nodos fuente y destino
+    - Interactividad: Highlighting de enlaces relacionados
+    - Tooltips: Información detallada de nodos y enlaces
+    
+    CONCEPTOS CLAVE:
+    - d3-sankey: Librería externa para layout automático
+    - d3.sankey(): Calcula posiciones de nodos y enlaces
+    - d3.sankeyLinkHorizontal(): Genera paths curvos para enlaces
+    - Gradientes SVG: Para colores de enlaces
+    
+    DEPENDENCIAS EXTERNAS:
+    - d3-sankey@0.12.3 (CDN)
+    
+    DATOS:
+    - sankeyData: Objeto con {nodes: [{name}], links: [{source, target, value}]}
+    - source/target son índices en el array nodes
+    
+    ============================================================================
+-->
 <!DOCTYPE html>
 <html lang="es">
 <head>

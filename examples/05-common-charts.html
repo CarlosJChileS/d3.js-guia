@@ -201,13 +201,33 @@
                     xFormat: d3.timeFormat('%b')
                 });
 
-                // Ejemplo 2: Gráfico de barras vertical
-                const barData = data.barChart;
-                if (!barData || barData.length === 0) {
-                    console.error('No hay datos para el gráfico de barras');
-                    return;
-                }
-                const { svg: svg2, g: g2, dims: dims2 } = createSVG('#chart2', 600, 400);
+                    /**
+                     * ====================================================================
+                     * EJEMPLO 2: GRÁFICO DE BARRAS (VERTICAL Y HORIZONTAL)
+                     * ====================================================================
+                     * 
+                     * PROPÓSITO: Comparar valores categóricos
+                     * 
+                     * VARIANTES:
+                     * - Vertical: Categorías en X, valores en Y
+                     * - Horizontal: Categorías en Y, valores en X
+                     * 
+                     * DIFERENCIAS CLAVE:
+                     * - Vertical: scaleBand en X, scaleLinear en Y
+                     * - Horizontal: scaleBand en Y, scaleLinear en X
+                     * 
+                     * ====================================================================
+                     */
+                    
+                    // Obtener datos de barras
+                    const barData = data.barChart;
+                    if (!barData || barData.length === 0) {
+                        console.error('No hay datos para el gráfico de barras');
+                        return;
+                    }
+                    
+                    // GRÁFICO DE BARRAS VERTICAL
+                    const { svg: svg2, g: g2, dims: dims2 } = createSVG('#chart2', 600, 400);
 
                 const xScale2 = d3.scaleBand()
                     .domain(barData.map(d => d.category))
@@ -236,8 +256,9 @@
                     yLabel: 'Valores'
                 });
 
-                // Gráfico de barras horizontal
-                const { svg: svg2b, g: g2b, dims: dims2b } = createSVG('#chart2b', 600, 400);
+                    // GRÁFICO DE BARRAS HORIZONTAL
+                    // Nota: En horizontal, las escalas se invierten
+                    const { svg: svg2b, g: g2b, dims: dims2b } = createSVG('#chart2b', 600, 400);
 
                 const yScale2b = d3.scaleBand()
                     .domain(barData.map(d => d.category))
@@ -266,8 +287,26 @@
                     yLabel: 'Categorías'
                 });
 
-                // Ejemplo 3: Gráfico de área
-                const { svg: svg3, g: g3, dims: dims3 } = createSVG('#chart3', 700, 400);
+                    /**
+                     * ====================================================================
+                     * EJEMPLO 3: GRÁFICO DE ÁREA
+                     * ====================================================================
+                     * 
+                     * PROPÓSITO: Mostrar acumulación o área bajo la curva
+                     * 
+                     * DIFERENCIA CON GRÁFICO DE LÍNEA:
+                     * - Línea: Solo muestra la trayectoria
+                     * - Área: Muestra el área bajo la curva (relleno)
+                     * 
+                     * TÉCNICAS:
+                     * - d3.area(): Generador de áreas SVG
+                     * - .y0(): Define la línea base (típicamente 0 o el mínimo)
+                     * - .y1(): Define la línea superior (valores de datos)
+                     * 
+                     * ====================================================================
+                     */
+                    
+                    const { svg: svg3, g: g3, dims: dims3 } = createSVG('#chart3', 700, 400);
 
                 const xScale3 = d3.scaleTime()
                     .domain(d3.extent(lineData, d => new Date(d.date + '-01')))
