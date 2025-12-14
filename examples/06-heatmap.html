@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapas de Calor</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <div class="example-page">
+        <a href="../index.html" class="back-link">← Volver al índice</a>
+        
+        <div class="example-header">
+            <h1>6. Mapas de Calor</h1>
+            <p>Visualización de intensidad usando colores</p>
+        </div>
+
+        <div class="chart-container">
+            <h2>Heatmap Básico</h2>
+            <p>Matriz de valores representados con colores.</p>
+            <div id="chart1" class="chart-wrapper"></div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Heatmap de Correlación</h2>
+            <p>Matriz de correlación entre variables.</p>
+            <div id="chart2" class="chart-wrapper"></div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Heatmap Temporal</h2>
+            <p>Evolución temporal de valores.</p>
+            <div id="chart3" class="chart-wrapper"></div>
+        </div>
+
+        <script src="../js/config.js"></script>
+        <script src="../js/utils.js"></script>
+        <script>
+            // Cargar datos
+            d3.json('../data/sample-data.json').then(data => {
+                // Ejemplo 1: Heatmap básico
+                const heatmapData = data.heatmapData;
+                const { svg: svg1, g: g1, dims: dims1 } = createSVG('#chart1', 600, 400);
+
+                const cellWidth = dims1.innerWidth / heatmapData.columns.length;
+                const cellHeight = dims1.innerHeight / heatmapData.rows.length;
+
+                // Escala de colores
+                const allValues = heatmapData.values.flat();
+                const colorScale1 = D3Config.createSequentialScale([
+                    d3.min(allValues),
+                    d3.max(allValues)
+                ]);
+
+                // Crear celdas
+                heatmapData.rows.forEach((row, i) => {
+                    heatmapData.columns.forEach((col, j) => {
+                        const value = heatmapData.values[i][j];
+                        g1.append('rect')
+                            .attr('x', j * cellWidth)
+                            .attr('y', i * cellHeight)
+                            .attr('width', cellWidth)
+                            .attr('height', cellHeight)
+                            .style('fill', colorScale1(value))
+                            .style('stroke', 'white')
+                            .style('stroke-width', 1);
+
+                        // Etiquetas de valor
+                        g1.append('text')
+                            .attr('x', j * cellWidth + cellWidth / 2)
+                            .attr('y', i * cellHeight + cellHeight / 2)
+                            .attr('text-anchor', 'middle')
+                            .attr('dy', '.35em')
+                            .style('font-size', '12px')
+                            .style('font-weight', 'bold')
+                            .style('fill', value > 80 ? 'white' : 'black')
+                            .text(value);
+                    });
+                });
+
+                // Etiquetas de filas
+                heatmapData.rows.forEach((row, i) => {
+                    g1.append('text')
+                        .attr('x', -5)
+                        .attr('y', i * cellHeight + cellHeight / 2)
+                        .attr('text-anchor', 'end')
+                        .attr('dy', '.35em')
+                        .style('font-size', '11px')
+                        .text(row);
+                });
+
+                // Etiquetas de columnas
+                heatmapData.columns.forEach((col, j) => {
+                    g1.append('text')
+                        .attr('x', j * cellWidth + cellWidth / 2)
+                        .attr('y', dims1.innerHeight + 20)
+                        .attr('text-anchor', 'middle')
+                        .style('font-size', '11px')
+                        .text(col);
+                });
+
+                // Leyenda
+                const legendWidth = 200;
+                const legendHeight = 20;
+                const legend1 = g1.append('g')
+                    .attr('transform', `translate(${dims1.innerWidth - legendWidth}, ${dims1.innerHeight + 40})`);
+
+                const legendScale1 = d3.scaleLinear()
+                    .domain([d3.min(allValues), d3.max(allValues)])
+                    .range([0, legendWidth]);
+
+                const legendAxis1 = d3.axisBottom(legendScale1)
+                    .ticks(5)
+                    .tickFormat(d3.format('d'));
+
+                const defs1 = svg1.append('defs');
+                const linearGradient1 = defs1.append('linearGradient')
+                    .attr('id', 'legend-gradient-1')
+                    .attr('x1', '0%')
+                    .attr('x2', '100%');
+
+                const stops1 = d3.range(0, 101, 10);
+                stops1.forEach(stop => {
+                    const value = d3.interpolate(d3.min(allValues), d3.max(allValues))(stop / 100);
+                    linearGradient1.append('stop')
+                        .attr('offset', `${stop}%`)
+                        .attr('stop-color', colorScale1(value));
+                });
+
+                legend1.append('rect')
+                    .attr('width', legendWidth)
+                    .attr('height', legendHeight)
+                    .style('fill', 'url(#legend-gradient-1)')
+                    .style('stroke', '#333');
+
+                legend1.append('g')
+                    .attr('transform', `translate(0, ${legendHeight})`)
+                    .call(legendAxis1);
+
+                // Ejemplo 2: Heatmap de correlación
+                const variables = ['Var A', 'Var B', 'Var C', 'Var D', 'Var E'];
+                const correlationData = [];
+                for (let i = 0; i < variables.length; i++) {
+                    correlationData[i] = [];
+                    for (let j = 0; j < variables.length; j++) {
+                        if (i === j) {
+                            correlationData[i][j] = 1.0;
+                        } else {
+                            correlationData[i][j] = Math.random() * 2 - 1; // -1 a 1
+                        }
+                    }
+                }
+
+                const { svg: svg2, g: g2, dims: dims2 } = createSVG('#chart2', 600, 500);
+
+                const cellSize = Math.min(dims2.innerWidth, dims2.innerHeight) / variables.length;
+
+                // Escala divergente para correlación
+                const colorScale2 = d3.scaleSequential(d3.interpolateRdBu)
+                    .domain([-1, 1]);
+
+                variables.forEach((row, i) => {
+                    variables.forEach((col, j) => {
+                        const value = correlationData[i][j];
+                        g2.append('rect')
+                            .attr('x', j * cellSize)
+                            .attr('y', i * cellSize)
+                            .attr('width', cellSize)
+                            .attr('height', cellSize)
+                            .style('fill', colorScale2(value))
+                            .style('stroke', 'white')
+                            .style('stroke-width', 1);
+
+                        g2.append('text')
+                            .attr('x', j * cellSize + cellSize / 2)
+                            .attr('y', i * cellSize + cellSize / 2)
+                            .attr('text-anchor', 'middle')
+                            .attr('dy', '.35em')
+                            .style('font-size', '11px')
+                            .style('font-weight', 'bold')
+                            .style('fill', Math.abs(value) > 0.5 ? 'white' : 'black')
+                            .text(d3.format('.2f')(value));
+                    });
+                });
+
+                // Etiquetas
+                variables.forEach((v, i) => {
+                    g2.append('text')
+                        .attr('x', -5)
+                        .attr('y', i * cellSize + cellSize / 2)
+                        .attr('text-anchor', 'end')
+                        .attr('dy', '.35em')
+                        .style('font-size', '11px')
+                        .text(v);
+
+                    g2.append('text')
+                        .attr('x', i * cellSize + cellSize / 2)
+                        .attr('y', dims2.innerHeight + 20)
+                        .attr('text-anchor', 'middle')
+                        .style('font-size', '11px')
+                        .text(v);
+                });
+
+                // Leyenda divergente
+                const legend2 = g2.append('g')
+                    .attr('transform', `translate(${dims2.innerWidth - 200}, ${dims2.innerHeight + 40})`);
+
+                const legendScale2 = d3.scaleLinear()
+                    .domain([-1, 1])
+                    .range([0, 200]);
+
+                const defs2 = svg2.append('defs');
+                const linearGradient2 = defs2.append('linearGradient')
+                    .attr('id', 'legend-gradient-2')
+                    .attr('x1', '0%')
+                    .attr('x2', '100%');
+
+                d3.range(0, 101, 5).forEach(stop => {
+                    const value = d3.interpolate(-1, 1)(stop / 100);
+                    linearGradient2.append('stop')
+                        .attr('offset', `${stop}%`)
+                        .attr('stop-color', colorScale2(value));
+                });
+
+                legend2.append('rect')
+                    .attr('width', 200)
+                    .attr('height', 20)
+                    .style('fill', 'url(#legend-gradient-2)')
+                    .style('stroke', '#333');
+
+                legend2.append('g')
+                    .attr('transform', 'translate(0, 20)')
+                    .call(d3.axisBottom(legendScale2).ticks(5));
+
+                // Ejemplo 3: Heatmap temporal
+                const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+                const hours = Array.from({ length: 24 }, (_, i) => i);
+                const temporalData = days.map(() => 
+                    hours.map(() => Math.random() * 100)
+                );
+
+                const { svg: svg3, g: g3, dims: dims3 } = createSVG('#chart3', 900, 400);
+
+                const cellWidth3 = dims3.innerWidth / hours.length;
+                const cellHeight3 = dims3.innerHeight / days.length;
+
+                const allTemporalValues = temporalData.flat();
+                const colorScale3 = D3Config.createSequentialScale([
+                    d3.min(allTemporalValues),
+                    d3.max(allTemporalValues)
+                ]);
+
+                days.forEach((day, i) => {
+                    hours.forEach((hour, j) => {
+                        const value = temporalData[i][j];
+                        g3.append('rect')
+                            .attr('x', j * cellWidth3)
+                            .attr('y', i * cellHeight3)
+                            .attr('width', cellWidth3)
+                            .attr('height', cellHeight3)
+                            .style('fill', colorScale3(value))
+                            .style('stroke', 'white')
+                            .style('stroke-width', 0.5)
+                            .append('title')
+                            .text(`${day}, ${hour}:00 - ${d3.format('.1f')(value)}`);
+                    });
+                });
+
+                // Etiquetas de días
+                days.forEach((day, i) => {
+                    g3.append('text')
+                        .attr('x', -5)
+                        .attr('y', i * cellHeight3 + cellHeight3 / 2)
+                        .attr('text-anchor', 'end')
+                        .attr('dy', '.35em')
+                        .style('font-size', '11px')
+                        .text(day);
+                });
+
+                // Etiquetas de horas (cada 3 horas)
+                hours.forEach((hour, j) => {
+                    if (hour % 3 === 0) {
+                        g3.append('text')
+                            .attr('x', j * cellWidth3 + cellWidth3 / 2)
+                            .attr('y', dims3.innerHeight + 15)
+                            .attr('text-anchor', 'middle')
+                            .style('font-size', '10px')
+                            .text(hour);
+                    }
+                });
+
+                // Leyenda
+                const legend3 = g3.append('g')
+                    .attr('transform', `translate(${dims3.innerWidth - 200}, ${dims3.innerHeight + 30})`);
+
+                const legendScale3 = d3.scaleLinear()
+                    .domain([d3.min(allTemporalValues), d3.max(allTemporalValues)])
+                    .range([0, 200]);
+
+                const defs3 = svg3.append('defs');
+                const linearGradient3 = defs3.append('linearGradient')
+                    .attr('id', 'legend-gradient-3')
+                    .attr('x1', '0%')
+                    .attr('x2', '100%');
+
+                d3.range(0, 101, 10).forEach(stop => {
+                    const value = d3.interpolate(d3.min(allTemporalValues), d3.max(allTemporalValues))(stop / 100);
+                    linearGradient3.append('stop')
+                        .attr('offset', `${stop}%`)
+                        .attr('stop-color', colorScale3(value));
+                });
+
+                legend3.append('rect')
+                    .attr('width', 200)
+                    .attr('height', 15)
+                    .style('fill', 'url(#legend-gradient-3)')
+                    .style('stroke', '#333');
+
+                legend3.append('g')
+                    .attr('transform', 'translate(0, 15)')
+                    .call(d3.axisBottom(legendScale3).ticks(5));
+            });
+        </script>
+    </div>
+</body>
+</html>
+

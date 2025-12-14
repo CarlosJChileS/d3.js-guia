@@ -1,0 +1,159 @@
+{
+  "_comment": "ARCHIVO: sample-data.json - Datos de ejemplo para todos los gráficos del proyecto",
+  "_usage": "d3.json('../data/sample-data.json').then(data => { const lineData = data.lineChart; })",
+  
+  "_lineChart_info": "Array de objetos con fecha (YYYY-MM) y valor numérico. Usado en 05-common-charts.html",
+  "lineChart": [
+    { "date": "2024-01", "value": 45 },
+    { "date": "2024-02", "value": 52 },
+    { "date": "2024-03", "value": 48 },
+    { "date": "2024-04", "value": 61 },
+    { "date": "2024-05", "value": 55 },
+    { "date": "2024-06", "value": 67 },
+    { "date": "2024-07", "value": 72 },
+    { "date": "2024-08", "value": 68 },
+    { "date": "2024-09", "value": 75 },
+    { "date": "2024-10", "value": 80 },
+    { "date": "2024-11", "value": 85 },
+    { "date": "2024-12", "value": 92 }
+  ],
+  
+  "_barChart_info": "Array de objetos con category (string) y value (número). Usado en 05-common-charts.html",
+  "barChart": [
+    { "category": "A", "value": 120 },
+    { "category": "B", "value": 190 },
+    { "category": "C", "value": 300 },
+    { "category": "D", "value": 250 },
+    { "category": "E", "value": 180 }
+  ],
+  
+  "_scatterData_info": "Array de objetos con x, y (números) y category (string). Usado en 05-common-charts.html",
+  "scatterData": [
+    { "x": 10, "y": 20, "category": "A" },
+    { "x": 15, "y": 30, "category": "A" },
+    { "x": 20, "y": 25, "category": "B" },
+    { "x": 25, "y": 40, "category": "B" },
+    { "x": 30, "y": 35, "category": "C" },
+    { "x": 35, "y": 50, "category": "C" },
+    { "x": 40, "y": 45, "category": "A" },
+    { "x": 45, "y": 60, "category": "B" },
+    { "x": 50, "y": 55, "category": "C" },
+    { "x": 55, "y": 70, "category": "A" }
+  ],
+  
+  "_pieData_info": "Array de objetos con label (string) y value (número). Usado en 05-common-charts.html",
+  "pieData": [
+    { "label": "Categoría A", "value": 30 },
+    { "label": "Categoría B", "value": 25 },
+    { "label": "Categoría C", "value": 20 },
+    { "label": "Categoría D", "value": 15 },
+    { "label": "Categoría E", "value": 10 }
+  ],
+  
+  "_heatmapData_info": "Objeto con rows, columns (arrays) y values (matriz 2D). Usado en 06-heatmap.html",
+  "heatmapData": {
+    "rows": ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"],
+    "columns": ["Mañana", "Tarde", "Noche"],
+    "values": [
+      [65, 75, 85],
+      [70, 80, 90],
+      [68, 78, 88],
+      [72, 82, 92],
+      [75, 85, 95]
+    ]
+  },
+  
+  "_histogramData_info": "Array simple de números. d3.histogram() los agrupa en bins. Usado en 07-histogram.html",
+  "histogramData": [
+    12, 15, 18, 20, 22, 25, 28, 30, 32, 35, 38, 40, 42, 45, 48, 50, 52, 55, 58, 60,
+    62, 65, 68, 70, 72, 75, 78, 80, 82, 85, 88, 90, 92, 95, 98, 100, 102, 105, 108, 110
+  ],
+  
+  "_boxplotData_info": "Objeto: cada clave es un grupo, cada valor es array de números. Usado en 08-boxplot.html",
+  "boxplotData": {
+    "Grupo A": [23, 25, 28, 30, 32, 35, 38, 40, 42, 45, 48, 50, 52, 55, 58, 60, 62, 65, 68, 70],
+    "Grupo B": [15, 18, 20, 22, 25, 28, 30, 32, 35, 38, 40, 42, 45, 48, 50, 52, 55, 58, 60, 62],
+    "Grupo C": [30, 32, 35, 38, 40, 42, 45, 48, 50, 52, 55, 58, 60, 62, 65, 68, 70, 72, 75, 78]
+  },
+  
+  "_paretoData_info": "Array de objetos con category, value, frequency. Debe ordenarse por value descendente. Usado en 09-pareto.html",
+  "paretoData": [
+    { "category": "Problema A", "value": 45, "frequency": 0.35 },
+    { "category": "Problema B", "value": 30, "frequency": 0.23 },
+    { "category": "Problema C", "value": 20, "frequency": 0.15 },
+    { "category": "Problema D", "value": 15, "frequency": 0.12 },
+    { "category": "Problema E", "value": 10, "frequency": 0.08 },
+    { "category": "Otros", "value": 9, "frequency": 0.07 }
+  ],
+  
+  "_radarData_info": "Objeto: cada clave es una serie, cada valor es objeto con dimensiones (A-E) y valores 0-100. Usado en 10-radar.html",
+  "radarData": {
+    "Serie 1": { "A": 80, "B": 90, "C": 70, "D": 85, "E": 75 },
+    "Serie 2": { "A": 60, "B": 70, "C": 80, "D": 65, "E": 90 },
+    "Serie 3": { "A": 90, "B": 75, "C": 85, "D": 80, "E": 70 }
+  },
+  
+  "_waterfallData_info": "Array de objetos con label, value (número) y type (start/positive/negative/end). Usado en 11-waterfall.html",
+  "waterfallData": [
+    { "label": "Inicio", "value": 1000, "type": "start" },
+    { "label": "Ventas", "value": 500, "type": "positive" },
+    { "label": "Costos", "value": -200, "type": "negative" },
+    { "label": "Ingresos", "value": 300, "type": "positive" },
+    { "label": "Gastos", "value": -150, "type": "negative" },
+    { "label": "Final", "value": 1450, "type": "end" }
+  ],
+  
+  "_swarmData_info": "Array de objetos con category (string) y value (número). Múltiples puntos por categoría. Usado en 12-swarm.html",
+  "swarmData": [
+    { "category": "A", "value": 25 },
+    { "category": "A", "value": 30 },
+    { "category": "A", "value": 28 },
+    { "category": "B", "value": 45 },
+    { "category": "B", "value": 50 },
+    { "category": "B", "value": 48 },
+    { "category": "C", "value": 65 },
+    { "category": "C", "value": 70 },
+    { "category": "C", "value": 68 },
+    { "category": "A", "value": 32 },
+    { "category": "B", "value": 52 },
+    { "category": "C", "value": 72 }
+  ],
+  
+  "_kdeData_info": "Objeto: cada clave es una distribución, cada valor es array de números. KDE estima densidad. Usado en 13-kde.html",
+  "kdeData": {
+    "Distribución 1": [12, 15, 18, 20, 22, 25, 28, 30, 32, 35, 38, 40, 42, 45, 48, 50],
+    "Distribución 2": [30, 32, 35, 38, 40, 42, 45, 48, 50, 52, 55, 58, 60, 62, 65, 68]
+  },
+  
+  "_sankeyData_info": "Objeto con nodes (array de {name}) y links (array de {source, target, value}). source/target son índices. Usado en 14-sankey.html",
+  "sankeyData": {
+    "nodes": [
+      { "name": "Fuente A" },
+      { "name": "Fuente B" },
+      { "name": "Fuente C" },
+      { "name": "Destino X" },
+      { "name": "Destino Y" },
+      { "name": "Destino Z" }
+    ],
+    "links": [
+      { "source": 0, "target": 3, "value": 50 },
+      { "source": 0, "target": 4, "value": 30 },
+      { "source": 1, "target": 4, "value": 40 },
+      { "source": 1, "target": 5, "value": 20 },
+      { "source": 2, "target": 5, "value": 60 },
+      { "source": 2, "target": 3, "value": 10 }
+    ]
+  },
+  
+  "_timeSeries_info": "Array de objetos con date (YYYY-MM-DD) y value (número). Usado en gráficos temporales",
+  "timeSeries": [
+    { "date": "2024-01-01", "value": 100 },
+    { "date": "2024-01-02", "value": 105 },
+    { "date": "2024-01-03", "value": 98 },
+    { "date": "2024-01-04", "value": 110 },
+    { "date": "2024-01-05", "value": 115 },
+    { "date": "2024-01-06", "value": 108 },
+    { "date": "2024-01-07", "value": 120 }
+  ]
+}
+

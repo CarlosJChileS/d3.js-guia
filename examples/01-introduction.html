@@ -1,0 +1,451 @@
+<!--
+    ============================================================================
+    ARCHIVO: 01-introduction.html
+    ============================================================================
+    
+    PROPÓSITO:
+    Página de introducción que enseña los conceptos fundamentales de D3.js
+    de forma progresiva, desde lo más básico hasta un gráfico completo.
+    
+    CONCEPTOS ENSEÑADOS:
+    1. Selecciones y SVG: Cómo seleccionar elementos y crear SVG
+    2. Datos y Binding: Cómo vincular datos con elementos DOM
+    3. Escalas: Cómo transformar datos a coordenadas visuales
+    4. Ejes: Cómo crear ejes para interpretar los datos
+    5. Ejemplo completo: Combinando todo en un gráfico de barras
+    
+    ESTRUCTURA:
+    - Head: Carga D3.js desde CDN y estilos
+    - Body: 5 secciones, cada una enseñando un concepto
+    - Script: Código JavaScript comentado paso a paso
+    
+    DEPENDENCIAS:
+    - D3.js v7 (CDN)
+    - config.js, utils.js, axes.js (archivos locales)
+    
+    ============================================================================
+-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Metadatos básicos -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Introducción a D3.js</title>
+    
+    <!-- ========================================================================
+         DEPENDENCIAS EXTERNAS
+         ========================================================================
+         D3.js v7: Biblioteca principal para visualización de datos
+         Se carga desde CDN (Content Delivery Network) para mejor rendimiento
+    -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    
+    <!-- Estilos del proyecto -->
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Contenedor principal de la página de ejemplo -->
+    <div class="example-page">
+        
+        <!-- Enlace de navegación para volver al índice -->
+        <a href="../index.html" class="back-link">← Volver al índice</a>
+        
+        <!-- Encabezado de la página -->
+        <div class="example-header">
+            <h1>1. Introducción a D3.js</h1>
+            <p>Conceptos fundamentales: selecciones, datos, escalas y ejes</p>
+        </div>
+
+        <div class="chart-container">
+            <h2>Concepto 1: Selecciones y SVG</h2>
+            <p>D3.js permite seleccionar elementos del DOM y manipularlos. Empezamos creando un SVG básico.</p>
+            <div id="chart1" class="chart-wrapper"></div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Concepto 2: Datos y Binding</h2>
+            <p>D3.js une datos con elementos del DOM usando el patrón data-join (enter, update, exit).</p>
+            <div id="chart2" class="chart-wrapper"></div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Concepto 3: Escalas</h2>
+            <p>Las escalas transforman datos del dominio (datos) al rango (píxeles en pantalla).</p>
+            <div id="chart3" class="chart-wrapper"></div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Concepto 4: Ejes</h2>
+            <p>Los ejes ayudan a interpretar los datos mostrando marcas y etiquetas.</p>
+            <div id="chart4" class="chart-wrapper"></div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Ejemplo Completo: Gráfico de Barras Simple</h2>
+            <p>Combinando todos los conceptos para crear un gráfico completo.</p>
+            <div id="chart5" class="chart-wrapper"></div>
+        </div>
+
+        <script src="../js/config.js"></script>
+        <script src="../js/utils.js"></script>
+        <script src="../js/axes.js"></script>
+        <script>
+            // Esperar a que el DOM esté listo
+            document.addEventListener('DOMContentLoaded', function() {
+                // Verificar que D3 y las funciones estén disponibles
+                if (typeof d3 === 'undefined') {
+                    console.error('D3.js no está cargado');
+                    return;
+                }
+                if (typeof createSVG === 'undefined') {
+                    console.error('createSVG no está disponible');
+                    return;
+                }
+                if (typeof createAxes === 'undefined') {
+                    console.error('createAxes no está disponible');
+                    return;
+                }
+                if (typeof createGrid === 'undefined') {
+                    console.error('createGrid no está disponible');
+                    return;
+                }
+                
+                // ================================================================
+                // EJEMPLO 1: SELECCIONES Y SVG BÁSICO
+                // ================================================================
+                // 
+                // OBJETIVO: Mostrar cómo seleccionar elementos y crear SVG básico
+                //
+                // PASOS:
+                // 1. Seleccionar el contenedor con d3.select()
+                // 2. Crear elemento SVG con .append('svg')
+                // 3. Establecer dimensiones con .attr()
+                // 4. Agregar elementos gráficos (círculos, rectángulos)
+                //
+                // CONCEPTOS:
+                // - d3.select('#id'): Selecciona un elemento por ID
+                // - .append('elemento'): Crea y agrega un nuevo elemento
+                // - .attr('nombre', valor): Establece un atributo
+                // - Encadenamiento: Cada método retorna la selección
+                //
+                // ================================================================
+                
+                // PASO 1: Seleccionar el contenedor y crear SVG
+                // d3.select('#chart1'): Busca el elemento con id="chart1"
+                // .append('svg'): Crea un elemento <svg> dentro de #chart1
+                // .attr('width', 400): Establece el ancho del SVG a 400 píxeles
+                // .attr('height', 200): Establece el alto del SVG a 200 píxeles
+                const svg1 = d3.select('#chart1')
+                    .append('svg')
+                    .attr('width', 400)
+                    .attr('height', 200);
+
+                // PASO 2: Agregar un círculo al SVG
+                // .append('circle'): Crea un elemento <circle>
+                // .attr('cx', 100): Posición X del centro del círculo
+                // .attr('cy', 100): Posición Y del centro del círculo
+                svg1.append('circle')
+                    .attr('cx', 100)
+                    .attr('cy', 100)
+                    .attr('r', 30)                    // Radio del círculo (30 píxeles)
+                    .style('fill', '#4a90e2');        // Color de relleno (azul)
+
+                // PASO 3: Agregar un rectángulo
+                // .append('rect'): Crea un elemento <rect>
+                // .attr('x', 150): Posición X de la esquina superior izquierda
+                // .attr('y', 70): Posición Y de la esquina superior izquierda
+                // .attr('width', 60): Ancho del rectángulo
+                // .attr('height', 60): Alto del rectángulo
+                svg1.append('rect')
+                    .attr('x', 150)
+                    .attr('y', 70)
+                    .attr('width', 60)
+                    .attr('height', 60)
+                    .style('fill', '#50c878');        // Color verde
+
+                // PASO 4: Agregar una línea
+                // .append('line'): Crea un elemento <line>
+                // .attr('x1', 250): Coordenada X del punto inicial
+                // .attr('y1', 50): Coordenada Y del punto inicial
+                // .attr('x2', 350): Coordenada X del punto final
+                // .attr('y2', 150): Coordenada Y del punto final
+                // .style('stroke', '#f39c12'): Color de la línea (naranja)
+                // .style('stroke-width', 3): Grosor de la línea
+                svg1.append('line')
+                    .attr('x1', 250)
+                    .attr('y1', 50)
+                    .attr('x2', 350)
+                    .attr('y2', 150)
+                    .style('stroke', '#f39c12')
+                    .style('stroke-width', 3);
+
+                // ================================================================
+                // EJEMPLO 2: DATOS Y BINDING (Data-Join Pattern)
+                // ================================================================
+                //
+                // OBJETIVO: Mostrar cómo vincular datos con elementos DOM
+                //
+                // PATRÓN DATA-JOIN:
+                // 1. selectAll('elemento'): Selecciona elementos (pueden no existir)
+                // 2. .data(datos): Vincula los datos con la selección
+                // 3. .enter(): Accede a los datos que no tienen elemento
+                // 4. .append('elemento'): Crea elementos para esos datos
+                //
+                // CONCEPTOS:
+                // - selectAll(): Selecciona todos los elementos que coinciden
+                // - .data(): Vincula un array de datos con elementos
+                // - .enter(): Selección de datos sin elemento asociado
+                // - .exit(): Selección de elementos sin datos (para eliminar)
+                //
+                // EJEMPLO:
+                // Si tienes 5 datos y 0 círculos:
+                // - .enter() contiene los 5 datos
+                // - Se crean 5 círculos nuevos
+                //
+                // ================================================================
+                
+                // PASO 1: Definir los datos
+                // Array de números que representan valores
+                const data2 = [10, 20, 30, 40, 50];
+                
+                // PASO 2: Crear SVG
+                const svg2 = d3.select('#chart2')
+                    .append('svg')
+                    .attr('width', 400)
+                    .attr('height', 200);
+
+                // PASO 3: Data-Join Pattern
+                // selectAll('circle'): Busca todos los círculos (puede que no existan)
+                // .data(data2): Vincula el array de datos con la selección
+                // .enter(): Accede a los datos que no tienen círculo asociado
+                // .append('circle'): Crea un círculo para cada dato en .enter()
+                const circles2 = svg2.selectAll('circle')
+                    .data(data2)        // Vincular datos
+                    .enter()            // Datos sin elemento
+                    .append('circle')   // Crear elemento para cada dato
+                    // PASO 4: Configurar atributos usando los datos
+                    // (d, i) => función: d = dato, i = índice
+                    // .attr('cx', (d, i) => 50 + i * 80):
+                    //   - Posición X = 50 + índice * 80 (espaciado horizontal)
+                    //   - Primer círculo: 50 + 0*80 = 50
+                    //   - Segundo círculo: 50 + 1*80 = 130
+                    //   - etc.
+                    .attr('cx', (d, i) => 50 + i * 80)
+                    .attr('cy', 100)                    // Posición Y fija (centro vertical)
+                    .attr('r', d => d)                  // Radio = valor del dato (10, 20, 30, etc.)
+                    .style('fill', '#9b59b6')           // Color morado
+                    .style('opacity', 0.7);              // Transparencia 70%
+
+                // ================================================================
+                // EJEMPLO 3: ESCALAS
+                // ================================================================
+                //
+                // OBJETIVO: Mostrar cómo transformar datos a coordenadas visuales
+                //
+                // ¿QUÉ ES UNA ESCALA?
+                // Una función que mapea valores del DOMINIO (datos) al RANGO (píxeles)
+                //
+                // EJEMPLO:
+                // Si tienes datos de 0 a 100 y quieres mostrarlos en 0 a 400 píxeles:
+                // - Escala: domain([0, 100]) → range([0, 400])
+                // - Dato 0 → 0 píxeles
+                // - Dato 50 → 200 píxeles
+                // - Dato 100 → 400 píxeles
+                //
+                // TIPOS DE ESCALAS:
+                // - scaleLinear(): Para números continuos
+                // - scaleBand(): Para categorías (espaciado uniforme)
+                // - scaleTime(): Para fechas
+                // - scaleOrdinal(): Para categorías con colores
+                //
+                // ================================================================
+                
+                // PASO 1: Definir datos
+                const data3 = [10, 25, 50, 75, 100];
+                
+                // PASO 2: Crear SVG
+                const svg3 = d3.select('#chart3')
+                    .append('svg')
+                    .attr('width', 500)
+                    .attr('height', 200);
+
+                // PASO 3: Crear escala lineal
+                // d3.scaleLinear(): Crea una escala que mapea números a números
+                // .domain([0, 100]): Valores mínimos y máximos de los datos
+                // .range([0, 400]): Valores mínimos y máximos en píxeles
+                //
+                // RESULTADO:
+                // - scale3(0) = 0 píxeles
+                // - scale3(50) = 200 píxeles
+                // - scale3(100) = 400 píxeles
+                const scale3 = d3.scaleLinear()
+                    .domain([0, 100])  // Dominio: valores de los datos (min, max)
+                    .range([0, 400]);  // Rango: píxeles en pantalla (min, max)
+
+                // PASO 4: Usar la escala para posicionar elementos
+                // scale3(d): Convierte el valor del dato a píxeles
+                svg3.selectAll('rect')
+                    .data(data3)
+                    .enter()
+                .append('rect')
+                .attr('x', 50)
+                .attr('y', (d, i) => 30 + i * 30)
+                .attr('width', d => scale3(d))
+                .attr('height', 20)
+                .style('fill', '#1abc9c');
+
+            // Etiquetas
+            svg3.selectAll('text')
+                .data(data3)
+                .enter()
+                .append('text')
+                .attr('x', d => 50 + scale3(d) + 5)
+                .attr('y', (d, i) => 45 + i * 30)
+                .text(d => d)
+                .style('font-size', '12px')
+                .style('fill', '#333');
+
+                // ================================================================
+                // EJEMPLO 4: EJES
+                // ================================================================
+                //
+                // OBJETIVO: Mostrar cómo crear ejes para interpretar los datos
+                //
+                // COMPONENTES:
+                // - Línea del eje: Línea principal
+                // - Ticks: Marcas pequeñas en la línea
+                // - Labels: Etiquetas de texto con valores
+                // - Grid: Líneas de fondo (opcional)
+                //
+                // ================================================================
+                
+                const data4 = [10, 20, 30, 40, 50];
+                
+                // Crear SVG con función auxiliar (incluye márgenes automáticos)
+                const { svg: svg4, g: g4, dims: dims4 } = createSVG('#chart4', 500, 300);
+
+                // Escala X: Para categorías (scaleBand)
+                const xScale4 = d3.scaleBand()
+                    .domain(data4.map((d, i) => `Item ${i + 1}`))
+                    .range([0, dims4.innerWidth])
+                    .padding(0.2);
+
+                // Escala Y: Para valores numéricos (scaleLinear)
+                const yScale4 = d3.scaleLinear()
+                    .domain([0, d3.max(data4)])
+                    .nice()  // Redondea los límites del dominio para valores "bonitos"
+                    .range([dims4.innerHeight, 0]);
+
+                // Crear barras usando las escalas
+                g4.selectAll('rect')
+                    .data(data4)
+                    .enter()
+                    .append('rect')
+                    .attr('x', (d, i) => xScale4(`Item ${i + 1}`))  // Posición X según categoría
+                    .attr('y', d => yScale4(d))                       // Posición Y según valor
+                    .attr('width', xScale4.bandwidth())              // Ancho = ancho de banda
+                    .attr('height', d => dims4.innerHeight - yScale4(d))  // Alto = desde Y hasta abajo
+                    .style('fill', '#4a90e2');
+
+                // Crear ejes con etiquetas
+                createAxes(g4, xScale4, yScale4, dims4, {
+                    xLabel: 'Categorías',
+                    yLabel: 'Valores'
+                });
+
+                // ================================================================
+                // EJEMPLO 5: GRÁFICO COMPLETO
+                // ================================================================
+                //
+                // OBJETIVO: Combinar todos los conceptos en un gráfico completo
+                //
+                // ELEMENTOS INCLUIDOS:
+                // - SVG con márgenes
+                // - Escalas X e Y
+                // - Cuadrícula de fondo
+                // - Barras con datos
+                // - Ejes con etiquetas
+                // - Tooltips interactivos
+                //
+                // Este es el patrón completo que se usa en todos los gráficos
+                // del proyecto.
+                //
+                // ================================================================
+                // PASO 1: Definir datos como objetos (estructura más realista)
+                // Cada objeto tiene propiedades: category (categoría) y value (valor)
+                const data5 = [
+                    { category: 'A', value: 30 },
+                    { category: 'B', value: 80 },
+                    { category: 'C', value: 45 },
+                    { category: 'D', value: 60 },
+                    { category: 'E', value: 25 }
+                ];
+
+                // PASO 2: Crear SVG con márgenes
+                const { svg: svg5, g: g5, dims: dims5 } = createSVG('#chart5', 600, 400);
+
+                // PASO 3: Crear escalas
+                // Escala X: Mapea categorías a posiciones horizontales
+                const xScale5 = d3.scaleBand()
+                    .domain(data5.map(d => d.category))  // ['A', 'B', 'C', 'D', 'E']
+                    .range([0, dims5.innerWidth])         // De 0 a ancho útil
+                    .padding(0.2);                        // 20% de espacio entre barras
+
+                // Escala Y: Mapea valores a posiciones verticales
+                const yScale5 = d3.scaleLinear()
+                    .domain([0, d3.max(data5, d => d.value)])  // De 0 al valor máximo (80)
+                    .nice()                                    // Redondear límites
+                    .range([dims5.innerHeight, 0]);            // De abajo hacia arriba
+
+                // PASO 4: Crear cuadrícula de fondo
+                createGrid(g5, xScale5, yScale5, dims5);
+
+                // PASO 5: Crear barras con animación
+                // Las barras empiezan desde abajo (height: 0) y crecen hacia arriba
+                g5.selectAll('rect')
+                    .data(data5)
+                    .enter()
+                    .append('rect')
+                    .attr('x', d => xScale5(d.category))      // Posición X según categoría
+                    .attr('y', dims5.innerHeight)              // Empezar desde abajo
+                    .attr('width', xScale5.bandwidth())        // Ancho de la banda
+                    .attr('height', 0)                          // Alto inicial = 0
+                    .style('fill', '#4a90e2')
+                    // TRANSICIÓN: Animación suave
+                    .transition()
+                    .duration(1000)                             // Duración: 1 segundo
+                    .attr('y', d => yScale5(d.value))           // Posición Y final
+                    .attr('height', d => dims5.innerHeight - yScale5(d.value));  // Alto final
+
+                // PASO 6: Agregar etiquetas de valores en las barras
+                g5.selectAll('.bar-label')
+                    .data(data5)
+                    .enter()
+                    .append('text')
+                    .attr('class', 'bar-label')
+                    .attr('x', d => xScale5(d.category) + xScale5.bandwidth() / 2)  // Centro de la barra
+                    .attr('y', d => yScale5(d.value) - 5)                            // 5px arriba del valor
+                    .attr('text-anchor', 'middle')                                    // Centrar texto
+                    .style('font-size', '12px')
+                    .style('font-weight', 'bold')
+                    .style('fill', '#333')
+                    .text(d => d.value);  // Mostrar el valor
+
+                // PASO 7: Crear ejes con etiquetas
+                createAxes(g5, xScale5, yScale5, dims5, {
+                    xLabel: 'Categorías',
+                    yLabel: 'Valores'
+                });
+            });
+            // ====================================================================
+            // FIN DEL CÓDIGO
+            // ====================================================================
+            // Este patrón (crear SVG → escalas → grid → elementos → ejes) se repite
+            // en todos los gráficos del proyecto. Una vez que entiendes este flujo,
+            // puedes crear cualquier tipo de gráfico.
+        </script>
+    </div>
+</body>
+</html>
+

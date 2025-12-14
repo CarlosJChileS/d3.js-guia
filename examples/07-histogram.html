@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histogramas</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <div class="example-page">
+        <a href="../index.html" class="back-link">← Volver al índice</a>
+        
+        <div class="example-header">
+            <h1>7. Histogramas</h1>
+            <p>Distribución de frecuencias de datos numéricos</p>
+        </div>
+
+        <div class="chart-container">
+            <h2>Histograma Básico</h2>
+            <p>Distribución de frecuencias usando d3.histogram().</p>
+            <div id="chart1" class="chart-wrapper"></div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Histograma Normalizado</h2>
+            <p>Frecuencias relativas (probabilidades).</p>
+            <div id="chart2" class="chart-wrapper"></div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Histograma Acumulativo</h2>
+            <p>Distribución acumulativa de frecuencias.</p>
+            <div id="chart3" class="chart-wrapper"></div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Comparación de Distribuciones</h2>
+            <p>Múltiples histogramas superpuestos.</p>
+            <div id="chart4" class="chart-wrapper"></div>
+        </div>
+
+        <script src="../js/config.js"></script>
+        <script src="../js/utils.js"></script>
+        <script src="../js/axes.js"></script>
+        <script>
+            // Esperar a que el DOM esté listo
+            document.addEventListener('DOMContentLoaded', function() {
+                // Verificar que D3 y las funciones estén disponibles
+                if (typeof d3 === 'undefined') {
+                    console.error('D3.js no está cargado');
+                    return;
+                }
+                if (typeof createSVG === 'undefined') {
+                    console.error('createSVG no está disponible');
+                    return;
+                }
+                if (typeof createGrid === 'undefined') {
+                    console.error('createGrid no está disponible');
+                    return;
+                }
+                
+                // Cargar datos
+                d3.json('../data/sample-data.json')
+                    .then(data => {
+                        if (!data) {
+                            console.error('No se pudieron cargar los datos');
+                            return;
+                        }
+                        
+                        const histogramData = data.histogramData;
+                        if (!histogramData || histogramData.length === 0) {
+                            console.error('No hay datos para los histogramas');
+                            return;
+                        }
+                        
+                        console.log('Datos de histograma cargados:', histogramData);
+
+                // Ejemplo 1: Histograma básico
+                const { svg: svg1, g: g1, dims: dims1 } = createSVG('#chart1', 700, 400);
+
+                const histogram1 = d3.histogram()
+                    .domain(d3.extent(histogramData))
+                    .thresholds(20);
+
+                const bins1 = histogram1(histogramData);
+
+                const xScale1 = d3.scaleLinear()
+                    .domain([d3.min(histogramData), d3.max(histogramData)])
+                    .range([0, dims1.innerWidth]);
+
+                const yScale1 = d3.scaleLinear()
+                    .domain([0, d3.max(bins1, d => d.length)])
+                    .nice()
+                    .range([dims1.innerHeight, 0]);
+
+                createGrid(g1, xScale1, yScale1, dims1);
+
+                g1.selectAll('rect')
+                    .data(bins1)
+                    .enter()
+                    .append('rect')
+                    .attr('x', d => xScale1(d.x0))
+                    .attr('y', d => yScale1(d.length))
+                    .attr('width', d => xScale1(d.x1) - xScale1(d.x0) - 1)
+                    .attr('height', d => dims1.innerHeight - yScale1(d.length))
+                    .style('fill', '#4a90e2')
+                    .style('stroke', '#357abd')
+                    .style('stroke-width', 1);
+
+                createAxes(g1, xScale1, yScale1, dims1, {
+                    xLabel: 'Valor',
+                    yLabel: 'Frecuencia'
+                });
+
+                // Ejemplo 2: Histograma normalizado
+                const { svg: svg2, g: g2, dims: dims2 } = createSVG('#chart2', 700, 400);
+
+                const histogram2 = d3.histogram()
+                    .domain(d3.extent(histogramData))
+                    .thresholds(20);
+
+                const bins2 = histogram2(histogramData);
+                const total = histogramData.length;
+
+                // Normalizar: convertir a probabilidades
+                const normalizedBins = bins2.map(bin => ({
+                    ...bin,
+                    probability: bin.length / total
+                }));
+
+                const xScale2 = d3.scaleLinear()
+                    .domain([d3.min(histogramData), d3.max(histogramData)])
+                    .range([0, dims2.innerWidth]);
+
+                const yScale2 = d3.scaleLinear()
+                    .domain([0, d3.max(normalizedBins, d => d.probability)])
+                    .nice()
+                    .range([dims2.innerHeight, 0]);
+
+                createGrid(g2, xScale2, yScale2, dims2);
+
+                g2.selectAll('rect')
+                    .data(normalizedBins)
+                    .enter()
+                    .append('rect')
+                    .attr('x', d => xScale2(d.x0))
+                    .attr('y', d => yScale2(d.probability))
+                    .attr('width', d => xScale2(d.x1) - xScale2(d.x0) - 1)
+                    .attr('height', d => dims2.innerHeight - yScale2(d.probability))
+                    .style('fill', '#50c878')
+                    .style('stroke', '#4caf50')
+                    .style('stroke-width', 1);
+
+                createAxes(g2, xScale2, yScale2, dims2, {
+                    xLabel: 'Valor',
+                    yLabel: 'Probabilidad',
+                    yFormat: d3.format('.2%')
+                });
+
+                // Ejemplo 3: Histograma acumulativo
+                const { svg: svg3, g: g3, dims: dims3 } = createSVG('#chart3', 700, 400);
+
+                const histogram3 = d3.histogram()
+                    .domain(d3.extent(histogramData))
+                    .thresholds(20);
+
+                const bins3 = histogram3(histogramData);
+                let cumulative = 0;
+                const cumulativeBins = bins3.map(bin => {
+                    cumulative += bin.length;
+                    return {
+                        ...bin,
+                        cumulative: cumulative,
+                        cumulativePercent: cumulative / total
+                    };
+                });
+
+                const xScale3 = d3.scaleLinear()
+                    .domain([d3.min(histogramData), d3.max(histogramData)])
+                    .range([0, dims3.innerWidth]);
+
+                const yScale3 = d3.scaleLinear()
+                    .domain([0, 1])
+                    .range([dims3.innerHeight, 0]);
+
+                createGrid(g3, xScale3, yScale3, dims3);
+
+                // Línea acumulativa
+                const line3 = d3.line()
+                    .x(d => xScale3((d.x0 + d.x1) / 2))
+                    .y(d => yScale3(d.cumulativePercent))
+                    .curve(d3.curveStepAfter);
+
+                g3.append('path')
+                    .datum(cumulativeBins)
+                    .attr('fill', 'none')
+                    .attr('stroke', '#f39c12')
+                    .attr('stroke-width', 3)
+                    .attr('d', line3);
+
+                // Barras del histograma
+                g3.selectAll('rect')
+                    .data(bins3)
+                    .enter()
+                    .append('rect')
+                    .attr('x', d => xScale3(d.x0))
+                    .attr('y', d => yScale3(d.length / total))
+                    .attr('width', d => xScale3(d.x1) - xScale3(d.x0) - 1)
+                    .attr('height', d => dims3.innerHeight - yScale3(d.length / total))
+                    .style('fill', '#4a90e2')
+                    .style('fill-opacity', 0.3)
+                    .style('stroke', '#357abd')
+                    .style('stroke-width', 1);
+
+                createAxes(g3, xScale3, yScale3, dims3, {
+                    xLabel: 'Valor',
+                    yLabel: 'Frecuencia Acumulativa',
+                    yFormat: d3.format('.1%')
+                });
+
+                // Ejemplo 4: Comparación de distribuciones
+                const data4a = histogramData;
+                const data4b = histogramData.map(d => d + 30 + Math.random() * 10);
+                const data4c = histogramData.map(d => d - 20 + Math.random() * 10);
+
+                const { svg: svg4, g: g4, dims: dims4 } = createSVG('#chart4', 700, 400);
+
+                const allData4 = [...data4a, ...data4b, ...data4c];
+                const histogram4 = d3.histogram()
+                    .domain(d3.extent(allData4))
+                    .thresholds(25);
+
+                const bins4a = histogram4(data4a);
+                const bins4b = histogram4(data4b);
+                const bins4c = histogram4(data4c);
+
+                const xScale4 = d3.scaleLinear()
+                    .domain(d3.extent(allData4))
+                    .range([0, dims4.innerWidth]);
+
+                const maxFreq = Math.max(
+                    d3.max(bins4a, d => d.length),
+                    d3.max(bins4b, d => d.length),
+                    d3.max(bins4c, d => d.length)
+                );
+
+                const yScale4 = d3.scaleLinear()
+                    .domain([0, maxFreq])
+                    .nice()
+                    .range([dims4.innerHeight, 0]);
+
+                createGrid(g4, xScale4, yScale4, dims4);
+
+                // Función para dibujar histograma
+                function drawHistogram(bins, color, opacity, offsetMultiplier) {
+                    bins.forEach((bin, i) => {
+                        const binWidth = xScale4(bin.x1) - xScale4(bin.x0);
+                        const offset = offsetMultiplier * (binWidth / 3);
+                        
+                        g4.append('rect')
+                            .attr('class', `hist-${color.replace('#', '')}`)
+                            .attr('x', xScale4(bin.x0) + offset)
+                            .attr('y', yScale4(bin.length))
+                            .attr('width', binWidth / 3)
+                            .attr('height', dims4.innerHeight - yScale4(bin.length))
+                            .style('fill', color)
+                            .style('fill-opacity', opacity)
+                            .style('stroke', 'white')
+                            .style('stroke-width', 1);
+                    });
+                }
+
+                drawHistogram(bins4a, '#4a90e2', 0.7, 0);
+                drawHistogram(bins4b, '#50c878', 0.7, 1);
+                drawHistogram(bins4c, '#f39c12', 0.7, 2);
+
+                // Leyenda
+                const legend4 = g4.append('g')
+                    .attr('transform', `translate(${dims4.innerWidth - 150}, 20)`);
+
+                ['Distribución A', 'Distribución B', 'Distribución C'].forEach((label, i) => {
+                    const colors = ['#4a90e2', '#50c878', '#f39c12'];
+                    const legendItem = legend4.append('g')
+                        .attr('transform', `translate(0, ${i * 25})`);
+                    
+                    legendItem.append('rect')
+                        .attr('width', 15)
+                        .attr('height', 15)
+                        .style('fill', colors[i])
+                        .style('fill-opacity', 0.7);
+                    
+                    legendItem.append('text')
+                        .attr('x', 20)
+                        .attr('y', 12)
+                        .style('font-size', '12px')
+                        .text(label);
+                });
+
+                createAxes(g4, xScale4, yScale4, dims4, {
+                    xLabel: 'Valor',
+                    yLabel: 'Frecuencia'
+                });
+                    })
+                    .catch(error => {
+                        console.error('Error al cargar los datos:', error);
+                        // Mostrar mensaje de error en la página
+                        document.querySelectorAll('.chart-wrapper').forEach(wrapper => {
+                            wrapper.innerHTML = '<p style="color: red; padding: 20px;">Error al cargar los datos. Por favor, verifica que el servidor esté ejecutándose correctamente.</p>';
+                        });
+                    });
+            });
+        </script>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,17 @@
+{
+  "name": "proyecto-d3js",
+  "version": "1.0.0",
+  "description": "Proyecto completo de visualización de datos con D3.js",
+  "scripts": {
+    "start": "npx http-server -p 8080 -o",
+    "serve": "npx http-server -p 8080"
+  },
+  "keywords": [
+    "d3.js",
+    "visualization",
+    "data-viz"
+  ],
+  "author": "",
+  "license": "MIT"
+}
+

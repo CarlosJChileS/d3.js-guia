@@ -1,0 +1,429 @@
+<!--
+    ============================================================================
+    ARCHIVO: 02-advanced-customization.html
+    ============================================================================
+    
+    PROPÓSITO:
+    Demuestra técnicas avanzadas de personalización en D3.js:
+    - Control detallado de ejes (rotación, formato, ticks)
+    - Etiquetas dinámicas con posicionamiento inteligente
+    - Uso de diferentes paletas de colores (categóricas, secuenciales)
+    - Temas y estilos personalizados
+    
+    CONCEPTOS ENSEÑADOS:
+    1. Ejes personalizados con createCustomXAxis/createCustomYAxis
+    2. Etiquetas múltiples en gráficos (valores, cambios porcentuales)
+    3. Paletas de colores (categóricas vs secuenciales)
+    4. Leyendas externas al gráfico
+    5. Gradientes SVG para escalas de color
+    
+    DEPENDENCIAS:
+    - D3.js v7 (CDN)
+    - config.js, utils.js, axes.js (archivos locales)
+    
+    ============================================================================
+-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personalización Avanzada</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <div class="example-page">
+        <a href="../index.html" class="back-link">← Volver al índice</a>
+        
+        <div class="example-header">
+            <h1>2. Personalización Avanzada</h1>
+            <p>Control detallado de ejes, etiquetas, colores y estilos</p>
+        </div>
+
+        <div class="chart-container">
+            <h2>Control Avanzado de Ejes</h2>
+            <p>Personalización de ticks, formato, rotación y posicionamiento de ejes.</p>
+            <div id="chart1" class="chart-wrapper"></div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Etiquetas Dinámicas</h2>
+            <p>Posicionamiento inteligente y formateo de etiquetas.</p>
+            <div id="chart2" class="chart-wrapper"></div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Paletas de Colores</h2>
+            <p>Uso de paletas categóricas, secuenciales y divergentes.</p>
+            <div style="display: flex; gap: 20px; align-items: flex-start;">
+                <div id="chart3" class="chart-wrapper" style="flex: 1;"></div>
+                <div id="legend3" style="min-width: 180px; padding: 20px; background: var(--bg-secondary); border-radius: 8px; box-shadow: 0 2px 8px var(--shadow);"></div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Temas y Estilos Personalizados</h2>
+            <p>Aplicación de temas consistentes en múltiples gráficos.</p>
+            <div id="chart4" class="chart-wrapper"></div>
+        </div>
+
+        <script src="../js/config.js"></script>
+        <script src="../js/utils.js"></script>
+        <script src="../js/axes.js"></script>
+        <script>
+            /**
+             * ====================================================================
+             * EJEMPLO 1: CONTROL AVANZADO DE EJES
+             * ====================================================================
+             * 
+             * OBJETIVO: Mostrar cómo personalizar ejes con opciones avanzadas
+             * 
+             * CARACTERÍSTICAS:
+             * - Rotación de etiquetas del eje X (-45 grados)
+             * - Tamaño y padding personalizados de ticks
+             * - Formato personalizado de valores
+             * - Etiquetas de ejes con createCustomXAxis/createCustomYAxis
+             * 
+             * FUNCIONES UTILIZADAS:
+             * - createCustomXAxis(): Eje X con opciones avanzadas
+             * - createCustomYAxis(): Eje Y con opciones avanzadas
+             * 
+             * ====================================================================
+             */
+            
+            // Datos: meses y valores correspondientes
+            const data1 = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto'];
+            const values1 = [45, 52, 48, 61, 55, 67, 72, 68];
+            
+            // Crear SVG con dimensiones personalizadas
+            const { svg: svg1, g: g1, dims: dims1 } = createSVG('#chart1', 700, 400);
+
+            const xScale1 = d3.scaleBand()
+                .domain(data1)
+                .range([0, dims1.innerWidth])
+                .padding(0.2);
+
+            const yScale1 = d3.scaleLinear()
+                .domain([0, d3.max(values1)])
+                .nice()
+                .range([dims1.innerHeight, 0]);
+
+            // Grid
+            createGrid(g1, xScale1, yScale1, dims1);
+
+            // Barras
+            g1.selectAll('rect')
+                .data(values1)
+                .enter()
+                .append('rect')
+                .attr('x', (d, i) => xScale1(data1[i]))
+                .attr('y', d => yScale1(d))
+                .attr('width', xScale1.bandwidth())
+                .attr('height', d => dims1.innerHeight - yScale1(d))
+                .style('fill', '#4a90e2')
+                .style('stroke', '#357abd')
+                .style('stroke-width', 2);
+
+            // Ejes personalizados
+            createCustomXAxis(g1, xScale1, dims1, {
+                label: 'Meses',
+                rotate: -45,
+                tickSize: 8,
+                tickPadding: 10
+            });
+
+            createCustomYAxis(g1, yScale1, dims1, {
+                label: 'Valores',
+                format: d3.format('d'),
+                ticks: 8
+            });
+
+            /**
+             * ====================================================================
+             * EJEMPLO 2: ETIQUETAS DINÁMICAS
+             * ====================================================================
+             * 
+             * OBJETIVO: Mostrar cómo agregar múltiples etiquetas en un gráfico
+             * 
+             * CARACTERÍSTICAS:
+             * - Etiquetas de valor en la parte superior de cada barra
+             * - Etiquetas de cambio porcentual con colores condicionales
+             * - Colores de barras basados en valores (verde=positivo, rojo=negativo)
+             * 
+             * TÉCNICAS:
+             * - Múltiples selecciones de texto para diferentes etiquetas
+             * - Posicionamiento relativo usando escalas
+             * - Colores condicionales basados en datos
+             * 
+             * ====================================================================
+             */
+            
+            // Datos con información adicional (cambio porcentual)
+            const data2 = [
+                { name: 'Producto A', value: 120, change: 15 },
+                { name: 'Producto B', value: 190, change: -8 },
+                { name: 'Producto C', value: 300, change: 25 },
+                { name: 'Producto D', value: 250, change: 12 },
+                { name: 'Producto E', value: 180, change: -5 }
+            ];
+
+            const { svg: svg2, g: g2, dims: dims2 } = createSVG('#chart2', 700, 400);
+
+            const xScale2 = d3.scaleBand()
+                .domain(data2.map(d => d.name))
+                .range([0, dims2.innerWidth])
+                .padding(0.2);
+
+            const yScale2 = d3.scaleLinear()
+                .domain([0, d3.max(data2, d => d.value)])
+                .nice()
+                .range([dims2.innerHeight, 0]);
+
+            // Barras
+            const bars2 = g2.selectAll('rect')
+                .data(data2)
+                .enter()
+                .append('rect')
+                .attr('x', d => xScale2(d.name))
+                .attr('y', d => yScale2(d.value))
+                .attr('width', xScale2.bandwidth())
+                .attr('height', d => dims2.innerHeight - yScale2(d.value))
+                .style('fill', d => d.change >= 0 ? '#4caf50' : '#f44336')
+                .style('stroke', '#333')
+                .style('stroke-width', 1);
+
+            // Etiquetas de valor
+            g2.selectAll('.value-label')
+                .data(data2)
+                .enter()
+                .append('text')
+                .attr('class', 'value-label')
+                .attr('x', d => xScale2(d.name) + xScale2.bandwidth() / 2)
+                .attr('y', d => yScale2(d.value) - 5)
+                .attr('text-anchor', 'middle')
+                .style('font-size', '12px')
+                .style('font-weight', 'bold')
+                .text(d => d.value);
+
+            // Etiquetas de cambio
+            g2.selectAll('.change-label')
+                .data(data2)
+                .enter()
+                .append('text')
+                .attr('class', 'change-label')
+                .attr('x', d => xScale2(d.name) + xScale2.bandwidth() / 2)
+                .attr('y', d => yScale2(d.value) - 25)
+                .attr('text-anchor', 'middle')
+                .style('font-size', '11px')
+                .style('fill', d => d.change >= 0 ? '#4caf50' : '#f44336')
+                .text(d => `${d.change >= 0 ? '+' : ''}${d.change}%`);
+
+            createAxes(g2, xScale2, yScale2, dims2, {
+                xLabel: 'Productos',
+                yLabel: 'Ventas'
+            });
+
+            /**
+             * ====================================================================
+             * EJEMPLO 3: PALETAS DE COLORES
+             * ====================================================================
+             * 
+             * OBJETIVO: Demostrar el uso de paletas categóricas y leyendas
+             * 
+             * CARACTERÍSTICAS:
+             * - Paleta categórica: Un color diferente para cada categoría
+             * - Leyenda externa al gráfico (usando flexbox)
+             * - Colores de D3Config.colors.categorical
+             * 
+             * LAYOUT:
+             * - Gráfico y leyenda lado a lado usando flexbox
+             * - Leyenda creada dinámicamente con D3
+             * 
+             * ====================================================================
+             */
+            
+            // Datos para demostrar paleta categórica
+            const categories = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+            const values3 = [20, 35, 45, 60, 75, 85, 95, 100];
+
+            // Ajustar ancho del gráfico para dejar espacio a la leyenda
+            const { svg: svg3, g: g3, dims: dims3 } = createSVG('#chart3', 600, 400);
+
+            // Paleta categórica
+            const colorScale3 = d3.scaleOrdinal()
+                .domain(categories)
+                .range(D3Config.colors.categorical);
+
+            const xScale3 = d3.scaleBand()
+                .domain(categories)
+                .range([0, dims3.innerWidth])
+                .padding(0.2);
+
+            const yScale3 = d3.scaleLinear()
+                .domain([0, 100])
+                .range([dims3.innerHeight, 0]);
+
+            g3.selectAll('rect')
+                .data(values3)
+                .enter()
+                .append('rect')
+                .attr('x', (d, i) => xScale3(categories[i]))
+                .attr('y', d => yScale3(d))
+                .attr('width', xScale3.bandwidth())
+                .attr('height', d => dims3.innerHeight - yScale3(d))
+                .style('fill', (d, i) => colorScale3(categories[i]));
+
+            // Leyenda de colores fuera del gráfico
+            const legendContainer = d3.select('#legend3');
+            legendContainer.append('h3')
+                .style('margin', '0 0 15px 0')
+                .style('font-size', '14px')
+                .style('font-weight', 'bold')
+                .style('color', 'var(--accent)')
+                .text('Leyenda');
+            
+            const legendList = legendContainer.append('div')
+                .style('display', 'flex')
+                .style('flex-direction', 'column')
+                .style('gap', '12px');
+
+            categories.forEach((cat, i) => {
+                const legendItem = legendList.append('div')
+                    .style('display', 'flex')
+                    .style('align-items', 'center')
+                    .style('gap', '10px');
+                
+                legendItem.append('div')
+                    .style('width', '20px')
+                    .style('height', '20px')
+                    .style('background', colorScale3(cat))
+                    .style('border-radius', '3px')
+                    .style('border', '1px solid rgba(0,0,0,0.1)');
+                
+                legendItem.append('span')
+                    .style('font-size', '13px')
+                    .style('color', 'var(--text-primary)')
+                    .text(`Categoría ${cat}`);
+            });
+
+            createAxes(g3, xScale3, yScale3, dims3, {
+                xLabel: 'Categorías',
+                yLabel: 'Valores (%)'
+            });
+
+            /**
+             * ====================================================================
+             * EJEMPLO 4: TEMAS Y ESTILOS PERSONALIZADOS
+             * ====================================================================
+             * 
+             * OBJETIVO: Mostrar el uso de escalas secuenciales y gradientes SVG
+             * 
+             * CARACTERÍSTICAS:
+             * - Escala secuencial: Colores que varían según el valor
+             * - Gradiente SVG para leyenda de color
+             * - Grid personalizado con estilo diferente
+             * - Leyenda integrada en el gráfico
+             * 
+             * TÉCNICAS:
+             * - D3Config.createSequentialScale(): Crea escala de colores
+             * - Gradientes SVG con <linearGradient> y <stop>
+             * - Leyenda con eje para mostrar la escala
+             * 
+             * ====================================================================
+             */
+            
+            // Datos para demostrar escala secuencial
+            const data4 = [10, 25, 30, 45, 50, 65, 70, 85, 90, 100];
+            const { svg: svg4, g: g4, dims: dims4 } = createSVG('#chart4', 700, 400);
+
+            // Escala secuencial: mapea valores (0-100) a colores (blanco-azul)
+            // D3Config.createSequentialScale() usa d3.interpolateBlues por defecto
+            const colorScale4 = D3Config.createSequentialScale([0, 100]);
+
+            const xScale4 = d3.scaleBand()
+                .domain(data4.map((d, i) => i))
+                .range([0, dims4.innerWidth])
+                .padding(0.1);
+
+            const yScale4 = d3.scaleLinear()
+                .domain([0, 100])
+                .range([dims4.innerHeight, 0]);
+
+            // Barras con gradiente de color
+            g4.selectAll('rect')
+                .data(data4)
+                .enter()
+                .append('rect')
+                .attr('x', (d, i) => xScale4(i))
+                .attr('y', d => yScale4(d))
+                .attr('width', xScale4.bandwidth())
+                .attr('height', d => dims4.innerHeight - yScale4(d))
+                .style('fill', d => colorScale4(d))
+                .style('stroke', '#333')
+                .style('stroke-width', 1);
+
+            // Grid con estilo personalizado
+            createGrid(g4, xScale4, yScale4, dims4, {
+                stroke: '#ccc',
+                strokeWidth: 1,
+                strokeDasharray: '2,2'
+            });
+
+            createAxes(g4, xScale4, yScale4, dims4, {
+                xLabel: 'Índice',
+                yLabel: 'Valor',
+                xFormat: d => `#${d}`
+            });
+
+            // Leyenda de color secuencial
+            const legendWidth = 200;
+            const legendHeight = 20;
+            const legend4 = g4.append('g')
+                .attr('class', 'legend')
+                .attr('transform', `translate(${dims4.innerWidth - legendWidth - 20}, ${dims4.innerHeight + 50})`);
+
+            const legendScale = d3.scaleLinear()
+                .domain([0, 100])
+                .range([0, legendWidth]);
+
+            const legendAxis = d3.axisBottom(legendScale)
+                .ticks(5)
+                .tickFormat(d3.format('d'));
+
+            // Gradiente para la leyenda
+            const defs = svg4.append('defs');
+            const linearGradient = defs.append('linearGradient')
+                .attr('id', 'legend-gradient')
+                .attr('x1', '0%')
+                .attr('x2', '100%');
+
+            const stops = [0, 25, 50, 75, 100];
+            stops.forEach(stop => {
+                linearGradient.append('stop')
+                    .attr('offset', `${stop}%`)
+                    .attr('stop-color', colorScale4(stop));
+            });
+
+            legend4.append('rect')
+                .attr('width', legendWidth)
+                .attr('height', legendHeight)
+                .style('fill', 'url(#legend-gradient)')
+                .style('stroke', '#333');
+
+            legend4.append('g')
+                .attr('transform', `translate(0, ${legendHeight})`)
+                .call(legendAxis);
+
+            legend4.append('text')
+                .attr('x', legendWidth / 2)
+                .attr('y', -5)
+                .style('text-anchor', 'middle')
+                .style('font-size', '12px')
+                .style('font-weight', 'bold')
+                .text('Escala de Valores');
+        </script>
+    </div>
+</body>
+</html>
+

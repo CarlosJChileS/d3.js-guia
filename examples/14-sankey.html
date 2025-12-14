@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gráfico de Sankey</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <div class="example-page">
+        <a href="../index.html" class="back-link">← Volver al índice</a>
+        
+        <div class="example-header">
+            <h1>14. Gráfico de Sankey</h1>
+            <p>Diagrama de flujo que muestra el movimiento de cantidades entre nodos</p>
+        </div>
+
+        <div class="chart-container">
+            <h2>Diagrama de Sankey</h2>
+            <p>Flujo de datos entre fuentes y destinos.</p>
+            <div id="chart1" class="chart-wrapper"></div>
+        </div>
+
+        <script src="../js/config.js"></script>
+        <script src="../js/utils.js"></script>
+        <script src="../js/axes.js"></script>
+        <script>
+            // Esperar a que el DOM esté listo
+            document.addEventListener('DOMContentLoaded', function() {
+                // Verificar que D3 y las funciones estén disponibles
+                if (typeof d3 === 'undefined') {
+                    console.error('D3.js no está cargado');
+                    return;
+                }
+                if (typeof createSVG === 'undefined') {
+                    console.error('createSVG no está disponible');
+                    return;
+                }
+                if (typeof createTooltip === 'undefined') {
+                    console.error('createTooltip no está disponible');
+                    return;
+                }
+                
+                // Cargar datos
+                d3.json('../data/sample-data.json')
+                    .then(data => {
+                        if (!data) {
+                            console.error('No se pudieron cargar los datos');
+                            return;
+                        }
+                        
+                        const sankeyData = data.sankeyData;
+                        if (!sankeyData || !sankeyData.nodes || !sankeyData.links) {
+                            console.error('No hay datos de Sankey');
+                            return;
+                        }
+                        
+                        console.log('Datos de Sankey cargados:', sankeyData);
+
+                        const { svg: svg1, g: g1, dims: dims1 } = createSVG('#chart1', 1000, 700);
+
+                        // Preparar datos - mapear índices a objetos de nodos
+                        const nodes = sankeyData.nodes.map((node, i) => ({
+                            ...node,
+                            index: i
+                        }));
+
+                        const links = sankeyData.links.map(link => ({
+                            source: nodes[link.source],
+                            target: nodes[link.target],
+                            value: link.value
+                        }));
+
+                        // Calcular posiciones de nodos
+                        const nodeHeight = 40;
+                        const nodeSpacing = 50;
+                        const leftNodes = nodes.filter((n, i) => i < 3);
+                        const rightNodes = nodes.filter((n, i) => i >= 3);
+
+                        // Calcular altura total necesaria
+                        const totalHeight = Math.max(
+                            leftNodes.length * (nodeHeight + nodeSpacing),
+                            rightNodes.length * (nodeHeight + nodeSpacing)
+                        );
+                        const startY = (dims1.innerHeight - totalHeight) / 2;
+
+                        // Posicionar nodos izquierdos
+                        const leftX = 50;
+                        leftNodes.forEach((node, i) => {
+                            node.x = leftX;
+                            node.y = startY + i * (nodeHeight + nodeSpacing);
+                            node.width = 120;
+                            node.height = nodeHeight;
+                        });
+
+                        // Posicionar nodos derechos
+                        const rightX = dims1.innerWidth - 170;
+                        rightNodes.forEach((node, i) => {
+                            node.x = rightX;
+                            node.y = startY + i * (nodeHeight + nodeSpacing);
+                            node.width = 120;
+                            node.height = nodeHeight;
+                        });
+
+                        // Función para crear path de enlace curvo tipo Sankey
+                        function sankeyLink(d) {
+                            const sourceX = d.source.x + d.source.width;
+                            const sourceY = d.source.y + d.source.height / 2;
+                            const targetX = d.target.x;
+                            const targetY = d.target.y + d.target.height / 2;
+                            
+                            const dx = targetX - sourceX;
+                            const controlPointX = sourceX + dx * 0.5;
+                            
+                            // Crear curva suave tipo Bézier
+                            return `M${sourceX},${sourceY} C${controlPointX},${sourceY} ${controlPointX},${targetY} ${targetX},${targetY}`;
+                        }
+                        
+                        // Crear gradientes para los enlaces
+                        const defs = svg1.append('defs');
+                        links.forEach((link, i) => {
+                            const gradient = defs.append('linearGradient')
+                                .attr('id', `gradient-${i}`)
+                                .attr('x1', '0%')
+                                .attr('x2', '100%');
+                            
+                            const sourceColor = D3Config.getColor(link.source.index);
+                            const targetColor = D3Config.getColor(link.target.index);
+                            
+                            gradient.append('stop')
+                                .attr('offset', '0%')
+                                .attr('stop-color', sourceColor)
+                                .attr('stop-opacity', 0.6);
+                            
+                            gradient.append('stop')
+                                .attr('offset', '100%')
+                                .attr('stop-color', targetColor)
+                                .attr('stop-opacity', 0.6);
+                        });
+
+                        // Calcular anchos de enlaces basados en valores
+                        const maxValue = d3.max(links, d => d.value);
+                        const minLinkWidth = 3;
+                        const maxLinkWidth = 30;
+                        const linkWidthScale = d3.scaleLinear()
+                            .domain([0, maxValue])
+                            .range([minLinkWidth, maxLinkWidth]);
+
+                        // Dibujar enlaces (debajo de los nodos)
+                        const linkGroup = g1.append('g').attr('class', 'links');
+                        const linkPaths = linkGroup.selectAll('path')
+                            .data(links)
+                            .enter()
+                            .append('path')
+                            .attr('d', sankeyLink)
+                            .style('fill', 'none')
+                            .style('stroke', (d, i) => `url(#gradient-${i})`)
+                            .style('stroke-width', d => linkWidthScale(d.value))
+                            .style('stroke-opacity', 0.7)
+                            .style('cursor', 'pointer')
+                            .style('filter', 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))')
+                            .on('mouseover', function(event, d) {
+                                d3.select(this)
+                                    .style('stroke-opacity', 1)
+                                    .style('stroke-width', linkWidthScale(d.value) + 4)
+                                    .style('filter', 'drop-shadow(0 4px 8px rgba(0,0,0,0.4))');
+                            })
+                            .on('mouseout', function(event, d) {
+                                d3.select(this)
+                                    .style('stroke-opacity', 0.7)
+                                    .style('stroke-width', linkWidthScale(d.value))
+                                    .style('filter', 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))');
+                            });
+
+                        // Dibujar nodos (encima de los enlaces)
+                        const nodeGroup = g1.append('g').attr('class', 'nodes');
+                        const nodeRects = nodeGroup.selectAll('rect')
+                            .data(nodes)
+                            .enter()
+                            .append('rect')
+                            .attr('x', d => d.x)
+                            .attr('y', d => d.y)
+                            .attr('width', d => d.width)
+                            .attr('height', d => d.height)
+                            .attr('rx', 5)
+                            .attr('ry', 5)
+                            .style('fill', (d, i) => D3Config.getColor(i))
+                            .style('stroke', '#333')
+                            .style('stroke-width', 2)
+                            .style('cursor', 'pointer')
+                            .style('filter', 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))')
+                            .on('mouseover', function(event, d) {
+                                d3.select(this)
+                                    .style('opacity', 0.8)
+                                    .style('stroke-width', 3)
+                                    .style('filter', 'drop-shadow(0 4px 8px rgba(0,0,0,0.5))');
+                                
+                                // Resaltar enlaces relacionados
+                                linkPaths.style('opacity', link => {
+                                    return (link.source === d || link.target === d) ? 1 : 0.2;
+                                });
+                            })
+                            .on('mouseout', function(event, d) {
+                                d3.select(this)
+                                    .style('opacity', 1)
+                                    .style('stroke-width', 2)
+                                    .style('filter', 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))');
+                                
+                                // Restaurar opacidad de todos los enlaces
+                                linkPaths.style('opacity', 0.7);
+                            });
+
+                        // Etiquetas de nodos
+                        const nodeLabels = nodeGroup.selectAll('text')
+                            .data(nodes)
+                            .enter()
+                            .append('text')
+                            .attr('x', d => d.x + d.width / 2)
+                            .attr('y', d => d.y + d.height / 2)
+                            .attr('dy', '.35em')
+                            .attr('text-anchor', 'middle')
+                            .style('font-size', '13px')
+                            .style('font-weight', 'bold')
+                            .style('fill', '#fff')
+                            .style('pointer-events', 'none')
+                            .text(d => d.name);
+                        
+                        // Calcular totales para mostrar en nodos
+                        nodes.forEach(node => {
+                            const incoming = links.filter(l => l.target === node);
+                            const outgoing = links.filter(l => l.source === node);
+                            node.totalIn = d3.sum(incoming, l => l.value);
+                            node.totalOut = d3.sum(outgoing, l => l.value);
+                        });
+
+                        // Etiquetas de valores en enlaces (solo si el enlace es suficientemente ancho)
+                        linkGroup.selectAll('text.link-label')
+                            .data(links.filter(d => linkWidthScale(d.value) > 8))
+                            .enter()
+                            .append('text')
+                            .attr('class', 'link-label')
+                            .attr('x', d => {
+                                const sourceX = d.source.x + d.source.width;
+                                const targetX = d.target.x;
+                                return (sourceX + targetX) / 2;
+                            })
+                            .attr('y', d => {
+                                const sourceY = d.source.y + d.source.height / 2;
+                                const targetY = d.target.y + d.target.height / 2;
+                                return (sourceY + targetY) / 2;
+                            })
+                            .attr('text-anchor', 'middle')
+                            .attr('dy', '.35em')
+                            .style('font-size', '11px')
+                            .style('font-weight', 'bold')
+                            .style('fill', '#333')
+                            .style('pointer-events', 'none')
+                            .style('text-shadow', '0 1px 2px rgba(255,255,255,0.8)')
+                            .text(d => d.value);
+
+                        // Tooltip
+                        const tooltip = createTooltip('body');
+
+                        linkPaths.on('mouseover', function(event, d) {
+                            showTooltip(tooltip, `
+                                <strong>${d.source.name}</strong> → <strong>${d.target.name}</strong><br>
+                                Valor: ${d.value}
+                            `, event);
+                        })
+                        .on('mousemove', function(event) {
+                            showTooltip(tooltip, tooltip.html(), event);
+                        })
+                        .on('mouseout', function() {
+                            hideTooltip(tooltip);
+                        });
+
+                        nodeRects.on('mouseover', function(event, d) {
+                            const incoming = links.filter(l => l.target === d);
+                            const outgoing = links.filter(l => l.source === d);
+                            const totalIn = d3.sum(incoming, l => l.value);
+                            const totalOut = d3.sum(outgoing, l => l.value);
+                            
+                            showTooltip(tooltip, `
+                                <strong>${d.name}</strong><br>
+                                Entrada: ${totalIn || 0}<br>
+                                Salida: ${totalOut || 0}
+                            `, event);
+                        })
+                        .on('mousemove', function(event) {
+                            showTooltip(tooltip, tooltip.html(), event);
+                        })
+                        .on('mouseout', function() {
+                            hideTooltip(tooltip);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error al cargar los datos:', error);
+                        document.querySelectorAll('.chart-wrapper').forEach(wrapper => {
+                            wrapper.innerHTML = '<p style="color: red; padding: 20px;">Error al cargar los datos. Por favor, verifica que el servidor esté ejecutándose correctamente.</p>';
+                        });
+                    });
+            });
+        </script>
+    </div>
+</body>
+</html>
+

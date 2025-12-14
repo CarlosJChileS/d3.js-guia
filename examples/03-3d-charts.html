@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gráficos 3D</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        #chart1, #chart2, #chart3, #chart4, #chart5, #chart6, 
+        #chart7, #chart8, #chart9, #chart10, #chart11, #chart12, #chart13 {
+            width: 100%;
+            height: 500px;
+        }
+        .controls {
+            margin: 20px 0;
+            padding: 15px;
+            background: var(--bg-secondary);
+            border-radius: 5px;
+        }
+        .controls label {
+            display: inline-block;
+            margin-right: 15px;
+        }
+        .code-explanation {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid var(--accent);
+        }
+        .code-explanation h4 {
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+        .code-explanation code {
+            background: rgba(0,0,0,0.05);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="example-page">
+        <a href="../index.html" class="back-link">← Volver al índice</a>
+        
+        <div class="example-header">
+            <h1>3. Gráficos 3D</h1>
+            <p>Visualización tridimensional usando Three.js y D3.js</p>
+        </div>
+
+        <div class="chart-container">
+            <h2>Gráfico de Barras 3D</h2>
+            <p>Barras tridimensionales con rotación interactiva.</p>
+            <div class="controls">
+                <label>Rotación X: <input type="range" id="rotateX" min="0" max="360" value="45"></label>
+                <label>Rotación Y: <input type="range" id="rotateY" min="0" max="360" value="45"></label>
+                <button id="resetView">Resetear Vista</button>
+            </div>
+            <div id="chart1" class="chart-wrapper"></div>
+            <div class="code-explanation">
+                <h4>Conceptos Clave:</h4>
+                <ul style="margin: 10px 0; padding-left: 20px; color: var(--text-secondary);">
+                    <li><strong>Three.js Scene:</strong> Contenedor 3D donde se colocan los objetos</li>
+                    <li><strong>Camera:</strong> Define el punto de vista desde donde se observa la escena</li>
+                    <li><strong>Renderer:</strong> Dibuja la escena 3D en el canvas HTML</li>
+                    <li><strong>Escalas D3:</strong> Transforman datos (0-60) a coordenadas 3D (-3 a 3)</li>
+                    <li><strong>BoxGeometry:</strong> Crea la forma 3D de cada barra</li>
+                    <li><strong>MeshPhongMaterial:</strong> Material con iluminación para efecto 3D realista</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Superficie 3D con Datos</h2>
+            <p>Visualización de superficie usando puntos de datos.</p>
+            <div id="chart2" class="chart-wrapper"></div>
+            <div class="code-explanation">
+                <h4>Conceptos Clave:</h4>
+                <ul style="margin: 10px 0; padding-left: 20px; color: var(--text-secondary);">
+                    <li><strong>BufferGeometry:</strong> Geometría eficiente para muchos puntos/vertices</li>
+                    <li><strong>Triángulos:</strong> La superficie se construye con triángulos conectados</li>
+                    <li><strong>Vertex Colors:</strong> Cada punto puede tener su propio color</li>
+                    <li><strong>DoubleSide:</strong> La superficie se ve por ambos lados</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Gráfico de Líneas 3D</h2>
+            <p>Múltiples series de datos como líneas en el espacio 3D.</p>
+            <div id="chart3" class="chart-wrapper"></div>
+            <div class="code-explanation">
+                <h4>Conceptos Clave:</h4>
+                <ul style="margin: 10px 0; padding-left: 20px; color: var(--text-secondary);">
+                    <li><strong>Line:</strong> Conecta puntos secuenciales para formar una línea</li>
+                    <li><strong>BufferGeometry:</strong> Almacena las posiciones de los puntos</li>
+                    <li><strong>LineBasicMaterial:</strong> Material simple para líneas</li>
+                    <li><strong>SphereGeometry:</strong> Puntos esféricos para marcar cada dato</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Gráfico de Dispersión 3D</h2>
+            <p>Puntos en el espacio tridimensional con colores según categorías.</p>
+            <div id="chart4" class="chart-wrapper"></div>
+            <div class="code-explanation">
+                <h4>Conceptos Clave:</h4>
+                <ul style="margin: 10px 0; padding-left: 20px; color: var(--text-secondary);">
+                    <li><strong>SphereGeometry:</strong> Crea esferas 3D para cada punto de datos</li>
+                    <li><strong>MeshPhongMaterial:</strong> Material con iluminación para efecto 3D</li>
+                    <li><strong>Posicionamiento:</strong> Cada punto tiene coordenadas (x, y, z)</li>
+                    <li><strong>Colores por categoría:</strong> Cada categoría tiene un color único</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Gráfico de Barras Apiladas 3D</h2>
+            <p>Barras apiladas mostrando composición de datos en 3D.</p>
+            <div id="chart5" class="chart-wrapper"></div>
+            <div class="code-explanation">
+                <h4>Conceptos Clave:</h4>
+                <ul style="margin: 10px 0; padding-left: 20px; color: var(--text-secondary);">
+                    <li><strong>Apilamiento:</strong> Cada componente se coloca encima del anterior</li>
+                    <li><strong>currentY:</strong> Variable que acumula la altura para apilar</li>
+                    <li><strong>BoxGeometry:</strong> Cajas 3D para cada segmento de la barra</li>
+                    <li><strong>Escala D3:</strong> scaleBand() para distribuir barras en el eje X</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Superficie 3D desde Datos Reales</h2>
+            <p>Superficie generada a partir de datos numéricos reales.</p>
+            <div id="chart6" class="chart-wrapper"></div>
+            <div class="code-explanation">
+                <h4>Conceptos Clave:</h4>
+                <ul style="margin: 10px 0; padding-left: 20px; color: var(--text-secondary);">
+                    <li><strong>Matriz de datos:</strong> Grid 2D de valores numéricos</li>
+                    <li><strong>Triangulación:</strong> Cada cuadrado se divide en 2 triángulos</li>
+                    <li><strong>Colores por altura:</strong> El color indica el valor (altura Y)</li>
+                    <li><strong>MeshPhongMaterial:</strong> Material con iluminación para ver profundidad</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Mapa de Calor 3D</h2>
+            <p>Superficie 3D donde la altura y el color representan la intensidad de los datos.</p>
+            <div id="chart7" class="chart-wrapper"></div>
+            <div class="code-explanation">
+                <h4>Conceptos Clave:</h4>
+                <ul style="margin: 10px 0; padding-left: 20px; color: var(--text-secondary);">
+                    <li><strong>Heatmap 3D:</strong> Combina altura (Y) y color para mostrar intensidad</li>
+                    <li><strong>Escala secuencial:</strong> D3 mapea valores a colores</li>
+                    <li><strong>Superficie continua:</strong> Triángulos conectados forman la superficie</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Histograma 3D</h2>
+            <p>Barras 3D representando distribución de frecuencias de datos.</p>
+            <div id="chart8" class="chart-wrapper"></div>
+            <div class="code-explanation">
+                <h4>Conceptos Clave:</h4>
+                <ul style="margin: 10px 0; padding-left: 20px; color: var(--text-secondary);">
+                    <li><strong>d3.histogram():</strong> Agrupa datos en bins (intervalos)</li>
+                    <li><strong>Barras 3D:</strong> Cada bin se representa como una barra tridimensional</li>
+                    <li><strong>Color por frecuencia:</strong> Barras más altas tienen colores más intensos</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Boxplot 3D</h2>
+            <p>Diagramas de caja y bigotes en 3D para múltiples grupos.</p>
+            <div id="chart9" class="chart-wrapper"></div>
+            <div class="code-explanation">
+                <h4>Conceptos Clave:</h4>
+                <ul style="margin: 10px 0; padding-left: 20px; color: var(--text-secondary);">
+                    <li><strong>Cuartiles:</strong> Q1, mediana, Q3 representados en 3D</li>
+                    <li><strong>Bigotes:</strong> Líneas mostrando rango de datos</li>
+                    <li><strong>Comparación múltiple:</strong> Varios grupos lado a lado</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Pareto 3D</h2>
+            <p>Barras 3D ordenadas por valor con línea acumulativa en el eje Z.</p>
+            <div id="chart10" class="chart-wrapper"></div>
+            <div class="code-explanation">
+                <h4>Conceptos Clave:</h4>
+                <ul style="margin: 10px 0; padding-left: 20px; color: var(--text-secondary);">
+                    <li><strong>Ordenamiento:</strong> Barras ordenadas de mayor a menor</li>
+                    <li><strong>Línea acumulativa:</strong> Esferas en el eje Z muestran porcentaje acumulado</li>
+                    <li><strong>Regla 80/20:</strong> Visualización del principio de Pareto</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Cascada 3D</h2>
+            <p>Barras 3D mostrando cambios acumulativos paso a paso.</p>
+            <div id="chart11" class="chart-wrapper"></div>
+            <div class="code-explanation">
+                <h4>Conceptos Clave:</h4>
+                <ul style="margin: 10px 0; padding-left: 20px; color: var(--text-secondary);">
+                    <li><strong>Valores acumulativos:</strong> Cada barra parte del valor anterior</li>
+                    <li><strong>Colores:</strong> Verde para positivos, rojo para negativos</li>
+                    <li><strong>Flujo de datos:</strong> Muestra cómo un valor inicial cambia</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h2>KDE 3D (Superficie de Densidad)</h2>
+            <p>Superficie 3D representando estimación de densidad de probabilidad.</p>
+            <div id="chart12" class="chart-wrapper"></div>
+            <div class="code-explanation">
+                <h4>Conceptos Clave:</h4>
+                <ul style="margin: 10px 0; padding-left: 20px; color: var(--text-secondary);">
+                    <li><strong>Kernel Density Estimation:</strong> Estimación suave de distribución</li>
+                    <li><strong>Superficie de densidad:</strong> Altura = probabilidad, color = intensidad</li>
+                    <li><strong>Bandwidth:</strong> Ancho de banda controla la suavidad</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Radar 3D</h2>
+            <p>Gráfico de radar en 3D con múltiples dimensiones representadas espacialmente.</p>
+            <div id="chart13" class="chart-wrapper"></div>
+            <div class="code-explanation">
+                <h4>Conceptos Clave:</h4>
+                <ul style="margin: 10px 0; padding-left: 20px; color: var(--text-secondary);">
+                    <li><strong>Polígono 3D:</strong> Forma cerrada en el espacio tridimensional</li>
+                    <li><strong>Dimensiones radiales:</strong> Cada eje representa una dimensión</li>
+                    <li><strong>Triangulación:</strong> Superficie creada desde el centro</li>
+                </ul>
+            </div>
+        </div>
+
+        <script src="../js/config.js"></script>
+        <script src="../js/utils.js"></script>
+        <script>
+            // ============================================
+            // EJEMPLO 1: GRÁFICO DE BARRAS 3D
+            // ============================================
+            // Este ejemplo muestra cómo crear barras tridimensionales
+            // usando Three.js para renderizar y D3.js para escalar los datos
+            const data1 = [
+                { x: 0, y: 0, value: 20 },
+                { x: 1, y: 0, value: 35 },
+                { x: 2, y: 0, value: 45 },
+                { x: 0, y: 1, value: 30 },
+                { x: 1, y: 1, value: 50 },
+                { x: 2, y: 1, value: 40 },
+                { x: 0, y: 2, value: 25 },
+                { x: 1, y: 2, value: 55 },
+                { x: 2, y: 2, value: 60 }
+            ];
+
+            const container1 = document.getElementById('chart1');
+            const scene1 = new THREE.Scene();
+            const camera1 = new THREE.PerspectiveCamera(75, container1.clientWidth / container1.clientHeight, 0.1, 1000);
+            const renderer1 = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer1.setSize(container1.clientWidth, container1.clientHeight);
+            renderer1.setClearColor(0xffffff, 0);
+            container1.appendChild(renderer1.domElement);
+
+            // Iluminación
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene1.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 5);
+            scene1.add(directionalLight);
+
+            // ============================================
+            // PASO 4: USAR D3 PARA ESCALAR DATOS
+            // ============================================
+            // Las escalas D3 transforman datos a coordenadas 3D
+            // xScale: mapea posición X (0-2) a coordenadas 3D (-3 a 3)
+            const xScale = d3.scaleLinear().domain([0, 2]).range([-3, 3]);
+            
+            // yScale: mapea posición Y (0-2) a coordenadas 3D (-3 a 3)
+            const yScale = d3.scaleLinear().domain([0, 2]).range([-3, 3]);
+            
+            // zScale: mapea valores (0-60) a altura 3D (0 a 3)
+            const zScale = d3.scaleLinear().domain([0, 60]).range([0, 3]);
+            
+            // colorScale: mapea valores a colores (escala secuencial)
+            const colorScale = D3Config.createSequentialScale([0, 60]);
+
+            // ============================================
+            // PASO 5: CREAR LAS BARRAS 3D
+            // ============================================
+            const bars = [];
+            data1.forEach(d => {
+                // BoxGeometry: Crea una caja 3D (ancho, alto, profundidad)
+                // La altura de la barra viene del valor escalado
+                const geometry = new THREE.BoxGeometry(0.8, zScale(d.value), 0.8);
+                
+                // MeshPhongMaterial: Material con iluminación para efecto 3D
+                const material = new THREE.MeshPhongMaterial({ 
+                    color: new THREE.Color(colorScale(d.value)), // Color según valor
+                    shininess: 100 // Brillo del material
+                });
+                
+                // Mesh: Combina geometría + material = objeto 3D
+                const bar = new THREE.Mesh(geometry, material);
+                
+                // Posicionar la barra en el espacio 3D
+                // Y se divide por 2 porque la posición es el centro de la barra
+                bar.position.set(xScale(d.x), zScale(d.value) / 2, yScale(d.y));
+                
+                // Agregar la barra a la escena
+                scene1.add(bar);
+                bars.push(bar);
+            });
+
+            // ============================================
+            // PASO 6: AGREGAR ELEMENTOS DE REFERENCIA
+            // ============================================
+            // AxesHelper: Muestra los ejes X (rojo), Y (verde), Z (azul)
+            const axesHelper = new THREE.AxesHelper(5);
+            scene1.add(axesHelper);
+
+            // GridHelper: Muestra una cuadrícula en el plano XZ
+            const gridHelper = new THREE.GridHelper(10, 10, 0x888888, 0xcccccc);
+            scene1.add(gridHelper);
+
+            // ============================================
+            // PASO 7: POSICIONAR LA CÁMARA
+            // ============================================
+            // Colocar la cámara en posición (8, 8, 8) y mirar al origen (0, 0, 0)
+            camera1.position.set(8, 8, 8);
+            camera1.lookAt(0, 0, 0);
+
+            // ============================================
+            // PASO 8: CONTROLES INTERACTIVOS
+            // ============================================
+            let rotationX = 45;
+            let rotationY = 45;
+
+            // Cuando el usuario mueve el slider de rotación X
+            document.getElementById('rotateX').addEventListener('input', (e) => {
+                rotationX = parseFloat(e.target.value);
+                updateCamera();
+            });
+
+            // Cuando el usuario mueve el slider de rotación Y
+            document.getElementById('rotateY').addEventListener('input', (e) => {
+                rotationY = parseFloat(e.target.value);
+                updateCamera();
+            });
+
+            // Botón para resetear la vista
+            document.getElementById('resetView').addEventListener('click', () => {
+                rotationX = 45;
+                rotationY = 45;
+                document.getElementById('rotateX').value = 45;
+                document.getElementById('rotateY').value = 45;
+                updateCamera();
+            });
+
+            // Función que calcula la nueva posición de la cámara
+            // usando coordenadas esféricas (radio, ángulo X, ángulo Y)
+            function updateCamera() {
+                const radius = 12; // Distancia de la cámara al origen
+                // Convertir ángulos a coordenadas 3D usando trigonometría
+                const x = radius * Math.cos(rotationX * Math.PI / 180) * Math.cos(rotationY * Math.PI / 180);
+                const y = radius * Math.sin(rotationX * Math.PI / 180);
+                const z = radius * Math.cos(rotationX * Math.PI / 180) * Math.sin(rotationY * Math.PI / 180);
+                camera1.position.set(x, y, z);
+                camera1.lookAt(0, 0, 0); // La cámara siempre mira al centro
+            }
+
+            // ============================================
+            // PASO 9: ANIMACIÓN (LOOP DE RENDERIZADO)
+            // ============================================
+            // requestAnimationFrame: Pide al navegador que ejecute la función
+            // en el próximo frame (60 veces por segundo)
+            function animate1() {
+                requestAnimationFrame(animate1);
+                renderer1.render(scene1, camera1); // Dibujar la escena
+            }
+            animate1(); // Iniciar la animación
+
+            // ============================================
+            // EJEMPLO 2: SUPERFICIE 3D
+            // ============================================
+            // Este ejemplo muestra cómo crear una superficie 3D
+            // usando una función matemática para generar los datos
+            
+            // Crear escena, cámara y renderer (igual que ejemplo 1)
+            const container2 = document.getElementById('chart2');
+            const scene2 = new THREE.Scene();
+            const camera2 = new THREE.PerspectiveCamera(75, container2.clientWidth / container2.clientHeight, 0.1, 1000);
+            const renderer2 = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer2.setSize(container2.clientWidth, container2.clientHeight);
+            renderer2.setClearColor(0xffffff, 0);
+            container2.appendChild(renderer2.domElement);
+
+            // Iluminación
+            scene2.add(new THREE.AmbientLight(0xffffff, 0.6));
+            const light2 = new THREE.DirectionalLight(0xffffff, 0.8);
+            light2.position.set(5, 10, 5);
+            scene2.add(light2);
+
+            // ============================================
+            // GENERAR DATOS DE SUPERFICIE
+            // ============================================
+            // Crear una grilla de puntos usando una función matemática
+            const size = 20; // Tamaño de la grilla (20x20 puntos)
+            const data2 = [];
+            
+            // Generar puntos en una grilla
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    // Calcular posición X y Z en el plano
+                    const x = (i / size - 0.5) * 10; // -5 a 5
+                    const z = (j / size - 0.5) * 10; // -5 a 5
+                    
+                    // Calcular altura Y usando función matemática
+                    // Math.sin crea una onda, Math.sqrt calcula distancia al centro
+                    const y = Math.sin(Math.sqrt(x * x + z * z)) * 2;
+                    
+                    data2.push({ x, y, z });
+                }
+            }
+
+            // ============================================
+            // CREAR PUNTOS DE LA SUPERFICIE
+            // ============================================
+            const geometry2 = new THREE.BufferGeometry();
+            const positions = [];
+            const colors = [];
+            const colorScale2 = D3Config.createSequentialScale([-2, 2]);
+
+            // Para cada punto, agregar su posición y color
+            data2.forEach(d => {
+                positions.push(d.x, d.y, d.z); // Posición 3D
+                const color = new THREE.Color(colorScale2(d.y)); // Color según altura
+                colors.push(color.r, color.g, color.b); // RGB del color
+            });
+
+            // BufferGeometry es eficiente para muchos puntos
+            geometry2.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            geometry2.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+            // PointsMaterial: Material para renderizar puntos
+            const material2 = new THREE.PointsMaterial({ 
+                size: 0.2, // Tamaño de cada punto
+                vertexColors: true, // Usar colores por vértice
+                sizeAttenuation: true // Los puntos se ven más pequeños cuando están lejos
+            });
+            const points = new THREE.Points(geometry2, material2);
+            scene2.add(points);
+
+            // ============================================
+            // CREAR MALLA DE SUPERFICIE (TRIÁNGULOS)
+            // ============================================
+            // Una superficie se construye con triángulos
+            // Cada cuadrado de la grilla se divide en 2 triángulos
+            const surfaceGeometry = new THREE.BufferGeometry();
+            const surfacePositions = [];
+            const surfaceColors = [];
+
+            // Recorrer la grilla (menos 1 porque necesitamos el siguiente punto)
+            for (let i = 0; i < size - 1; i++) {
+                for (let j = 0; j < size - 1; j++) {
+                    // Índices de los 4 vértices del cuadrado
+                    const idx = i * size + j;           // Esquina superior izquierda
+                    const idx1 = (i + 1) * size + j;    // Esquina inferior izquierda
+                    const idx2 = i * size + (j + 1);   // Esquina superior derecha
+                    const idx3 = (i + 1) * size + (j + 1); // Esquina inferior derecha
+
+                    // Dividir el cuadrado en 2 triángulos
+                    // Triángulo 1: idx -> idx1 -> idx2
+                    // Triángulo 2: idx2 -> idx1 -> idx3
+                    [idx, idx1, idx2, idx2, idx1, idx3].forEach(vertexIdx => {
+                        const d = data2[vertexIdx];
+                        surfacePositions.push(d.x, d.y, d.z);
+                        const color = new THREE.Color(colorScale2(d.y));
+                        surfaceColors.push(color.r, color.g, color.b);
+                    });
+                }
+            }
+
+            surfaceGeometry.setAttribute('position', new THREE.Float32BufferAttribute(surfacePositions, 3));
+            surfaceGeometry.setAttribute('color', new THREE.Float32BufferAttribute(surfaceColors, 3));
+
+            const surfaceMaterial = new THREE.MeshBasicMaterial({ 
+                vertexColors: true,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.6
+            });
+            const surface = new THREE.Mesh(surfaceGeometry, surfaceMaterial);
+            scene2.add(surface);
+
+            camera2.position.set(15, 15, 15);
+            camera2.lookAt(0, 0, 0);
+
+            // Rotación automática
+            let angle = 0;
+            function animate2() {
+                requestAnimationFrame(animate2);
+                angle += 0.01;
+                camera2.position.x = 15 * Math.cos(angle);
+                camera2.position.z = 15 * Math.sin(angle);
+                camera2.lookAt(0, 0, 0);
+                renderer2.render(scene2, camera2);
+            }
+            animate2();
+
+            // ============================================
+            // EJEMPLO 3: GRÁFICO DE LÍNEAS 3D
+            // ============================================
+            // Múltiples series de datos representadas como líneas en el espacio 3D
+            
+            const container3 = document.getElementById('chart3');
+            const scene3 = new THREE.Scene();
+            const camera3 = new THREE.PerspectiveCamera(75, container3.clientWidth / container3.clientHeight, 0.1, 1000);
+            const renderer3 = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer3.setSize(container3.clientWidth, container3.clientHeight);
+            renderer3.setClearColor(0xffffff, 0);
+            container3.appendChild(renderer3.domElement);
+
+            // Iluminación
+            scene3.add(new THREE.AmbientLight(0xffffff, 0.6));
+            const light3 = new THREE.DirectionalLight(0xffffff, 0.8);
+            light3.position.set(5, 10, 5);
+            scene3.add(light3);
+
+            // Datos: 3 series temporales
+            const series1 = [];
+            const series2 = [];
+            const series3 = [];
+            
+            // Generar datos para cada serie
+            for (let i = 0; i < 20; i++) {
+                const x = (i / 20) * 10 - 5; // Eje X: tiempo
+                series1.push({ x, y: Math.sin(i * 0.3) * 2, z: -2 }); // Serie 1: atrás
+                series2.push({ x, y: Math.cos(i * 0.3) * 2, z: 0 });   // Serie 2: centro
+                series3.push({ x, y: Math.sin(i * 0.3 + 1) * 2, z: 2 }); // Serie 3: adelante
+            }
+
+            // Función para crear una línea 3D
+            function createLine3D(points, color) {
+                const geometry = new THREE.BufferGeometry();
+                const positions = [];
+                
+                points.forEach(point => {
+                    positions.push(point.x, point.y, point.z);
+                });
+                
+                geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+                
+                const material = new THREE.LineBasicMaterial({ 
+                    color: color,
+                    linewidth: 3
+                });
+                
+                return new THREE.Line(geometry, material);
+            }
+
+            // Crear las 3 líneas
+            const line1 = createLine3D(series1, 0x4a90e2); // Azul
+            const line2 = createLine3D(series2, 0x50c878); // Verde
+            const line3 = createLine3D(series3, 0xf39c12); // Naranja
+            
+            scene3.add(line1);
+            scene3.add(line2);
+            scene3.add(line3);
+
+            // Agregar puntos en cada línea para mejor visualización
+            [series1, series2, series3].forEach((series, idx) => {
+                const colors = [0x4a90e2, 0x50c878, 0xf39c12];
+                series.forEach(point => {
+                    const geometry = new THREE.SphereGeometry(0.1, 8, 8);
+                    const material = new THREE.MeshBasicMaterial({ color: colors[idx] });
+                    const sphere = new THREE.Mesh(geometry, material);
+                    sphere.position.set(point.x, point.y, point.z);
+                    scene3.add(sphere);
+                });
+            });
+
+            // Ejes y grid
+            scene3.add(new THREE.AxesHelper(5));
+            scene3.add(new THREE.GridHelper(10, 10, 0x888888, 0xcccccc));
+
+            camera3.position.set(10, 8, 10);
+            camera3.lookAt(0, 0, 0);
+
+            // Animación de rotación
+            let angle3 = 0;
+            function animate3() {
+                requestAnimationFrame(animate3);
+                angle3 += 0.005;
+                camera3.position.x = 10 * Math.cos(angle3);
+                camera3.position.z = 10 * Math.sin(angle3);
+                camera3.lookAt(0, 0, 0);
+                renderer3.render(scene3, camera3);
+            }
+            animate3();
+
+            // ============================================
+            // EJEMPLO 4: GRÁFICO DE DISPERSIÓN 3D
+            // ============================================
+            // Puntos en el espacio 3D con colores según categorías
+            
+            const container4 = document.getElementById('chart4');
+            const scene4 = new THREE.Scene();
+            const camera4 = new THREE.PerspectiveCamera(75, container4.clientWidth / container4.clientHeight, 0.1, 1000);
+            const renderer4 = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer4.setSize(container4.clientWidth, container4.clientHeight);
+            renderer4.setClearColor(0xffffff, 0);
+            container4.appendChild(renderer4.domElement);
+
+            // Iluminación
+            scene4.add(new THREE.AmbientLight(0xffffff, 0.6));
+            const light4 = new THREE.DirectionalLight(0xffffff, 0.8);
+            light4.position.set(5, 10, 5);
+            scene4.add(light4);
+
+            // Generar datos de dispersión 3D
+            const scatter3DData = [];
+            const categories4 = ['A', 'B', 'C'];
+            const colors4 = [0x4a90e2, 0x50c878, 0xf39c12];
+            
+            categories4.forEach((cat, catIdx) => {
+                for (let i = 0; i < 30; i++) {
+                    scatter3DData.push({
+                        x: (Math.random() - 0.5) * 8,
+                        y: (Math.random() - 0.5) * 8,
+                        z: (Math.random() - 0.5) * 8,
+                        category: cat,
+                        color: colors4[catIdx]
+                    });
+                }
+            });
+
+            // Crear puntos
+            scatter3DData.forEach(point => {
+                const geometry = new THREE.SphereGeometry(0.15, 8, 8);
+                const material = new THREE.MeshPhongMaterial({ 
+                    color: point.color,
+                    shininess: 100
+                });
+                const sphere = new THREE.Mesh(geometry, material);
+                sphere.position.set(point.x, point.y, point.z);
+                scene4.add(sphere);
+            });
+
+            // Ejes y grid
+            scene4.add(new THREE.AxesHelper(5));
+            scene4.add(new THREE.GridHelper(10, 10, 0x888888, 0xcccccc));
+
+            camera4.position.set(12, 12, 12);
+            camera4.lookAt(0, 0, 0);
+
+            // Animación de rotación
+            let angle4 = 0;
+            function animate4() {
+                requestAnimationFrame(animate4);
+                angle4 += 0.008;
+                camera4.position.x = 12 * Math.cos(angle4);
+                camera4.position.z = 12 * Math.sin(angle4);
+                camera4.lookAt(0, 0, 0);
+                renderer4.render(scene4, camera4);
+            }
+            animate4();
+
+            // ============================================
+            // EJEMPLO 5: GRÁFICO DE BARRAS APILADAS 3D
+            // ============================================
+            // Barras apiladas mostrando composición de datos
+            
+            const container5 = document.getElementById('chart5');
+            const scene5 = new THREE.Scene();
+            const camera5 = new THREE.PerspectiveCamera(75, container5.clientWidth / container5.clientHeight, 0.1, 1000);
+            const renderer5 = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer5.setSize(container5.clientWidth, container5.clientHeight);
+            renderer5.setClearColor(0xffffff, 0);
+            container5.appendChild(renderer5.domElement);
+
+            // Iluminación
+            scene5.add(new THREE.AmbientLight(0xffffff, 0.6));
+            const light5 = new THREE.DirectionalLight(0xffffff, 0.8);
+            light5.position.set(5, 10, 5);
+            scene5.add(light5);
+
+            // Datos: cada barra tiene 3 componentes apilados
+            const stackedData = [
+                { category: 'A', values: [20, 30, 25] },
+                { category: 'B', values: [15, 35, 30] },
+                { category: 'C', values: [25, 20, 35] },
+                { category: 'D', values: [30, 25, 20] }
+            ];
+
+            const componentColors = [0x4a90e2, 0x50c878, 0xf39c12];
+            const xScale5 = d3.scaleBand()
+                .domain(stackedData.map((d, i) => i))
+                .range([-4, 4]);
+
+            // Crear barras apiladas
+            stackedData.forEach((bar, barIdx) => {
+                let currentY = 0;
+                bar.values.forEach((value, compIdx) => {
+                    const height = value / 10; // Escalar altura
+                    const geometry = new THREE.BoxGeometry(0.6, height, 0.6);
+                    const material = new THREE.MeshPhongMaterial({ 
+                        color: componentColors[compIdx],
+                        shininess: 100
+                    });
+                    const box = new THREE.Mesh(geometry, material);
+                    box.position.set(xScale5(barIdx), currentY + height / 2, 0);
+                    scene5.add(box);
+                    currentY += height;
+                });
+            });
+
+            // Ejes y grid
+            scene5.add(new THREE.AxesHelper(5));
+            scene5.add(new THREE.GridHelper(10, 10, 0x888888, 0xcccccc));
+
+            camera5.position.set(8, 8, 8);
+            camera5.lookAt(0, 0, 0);
+
+            // Animación de rotación
+            let angle5 = 0;
+            function animate5() {
+                requestAnimationFrame(animate5);
+                angle5 += 0.006;
+                camera5.position.x = 8 * Math.cos(angle5);
+                camera5.position.z = 8 * Math.sin(angle5);
+                camera5.lookAt(0, 0, 0);
+                renderer5.render(scene5, camera5);
+            }
+            animate5();
+
+            // ============================================
+            // EJEMPLO 6: SUPERFICIE 3D DESDE DATOS REALES
+            // ============================================
+            // Superficie generada a partir de una matriz de datos
+            
+            const container6 = document.getElementById('chart6');
+            const scene6 = new THREE.Scene();
+            const camera6 = new THREE.PerspectiveCamera(75, container6.clientWidth / container6.clientHeight, 0.1, 1000);
+            const renderer6 = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer6.setSize(container6.clientWidth, container6.clientHeight);
+            renderer6.setClearColor(0xffffff, 0);
+            container6.appendChild(renderer6.domElement);
+
+            // Iluminación
+            scene6.add(new THREE.AmbientLight(0xffffff, 0.6));
+            const light6 = new THREE.DirectionalLight(0xffffff, 0.8);
+            light6.position.set(5, 10, 5);
+            scene6.add(light6);
+
+            // Generar matriz de datos (simulando datos reales)
+            const matrixSize = 15;
+            const dataMatrix = [];
+            for (let i = 0; i < matrixSize; i++) {
+                dataMatrix[i] = [];
+                for (let j = 0; j < matrixSize; j++) {
+                    // Función matemática para generar valores interesantes
+                    const x = (i / matrixSize - 0.5) * 8;
+                    const z = (j / matrixSize - 0.5) * 8;
+                    const value = Math.sin(Math.sqrt(x * x + z * z)) * 2 + 
+                                  Math.cos(x) * 0.5 + 
+                                  Math.sin(z) * 0.5;
+                    dataMatrix[i][j] = value;
+                }
+            }
+
+            // Crear geometría de superficie
+            const surfaceGeometry6 = new THREE.BufferGeometry();
+            const positions6 = [];
+            const colors6 = [];
+            
+            // Calcular min y max de los valores para la escala de colores
+            const allValues6 = dataMatrix.flat();
+            const minValue6 = d3.min(allValues6);
+            const maxValue6 = d3.max(allValues6);
+            const colorScale6 = D3Config.createSequentialScale([minValue6, maxValue6]);
+
+            // Crear triángulos para la superficie
+            for (let i = 0; i < matrixSize - 1; i++) {
+                for (let j = 0; j < matrixSize - 1; j++) {
+                    const x1 = (i / matrixSize - 0.5) * 8;
+                    const z1 = (j / matrixSize - 0.5) * 8;
+                    const y1 = dataMatrix[i][j];
+                    
+                    const x2 = ((i + 1) / matrixSize - 0.5) * 8;
+                    const z2 = (j / matrixSize - 0.5) * 8;
+                    const y2 = dataMatrix[i + 1][j];
+                    
+                    const x3 = (i / matrixSize - 0.5) * 8;
+                    const z3 = ((j + 1) / matrixSize - 0.5) * 8;
+                    const y3 = dataMatrix[i][j + 1];
+                    
+                    const x4 = ((i + 1) / matrixSize - 0.5) * 8;
+                    const z4 = ((j + 1) / matrixSize - 0.5) * 8;
+                    const y4 = dataMatrix[i + 1][j + 1];
+
+                    // Triángulo 1: cada vértice necesita su color basado en su altura Y
+                    const tri1Points6 = [[x1, y1, z1], [x2, y2, z2], [x3, y3, z3]];
+                    tri1Points6.forEach(point => {
+                        positions6.push(point[0], point[1], point[2]);
+                        const colorStr = colorScale6(point[1]);
+                        const color = new THREE.Color(colorStr);
+                        colors6.push(color.r, color.g, color.b);
+                    });
+
+                    // Triángulo 2
+                    const tri2Points6 = [[x2, y2, z2], [x4, y4, z4], [x3, y3, z3]];
+                    tri2Points6.forEach(point => {
+                        positions6.push(point[0], point[1], point[2]);
+                        const colorStr = colorScale6(point[1]);
+                        const color = new THREE.Color(colorStr);
+                        colors6.push(color.r, color.g, color.b);
+                    });
+                }
+            }
+
+            surfaceGeometry6.setAttribute('position', new THREE.Float32BufferAttribute(positions6, 3));
+            surfaceGeometry6.setAttribute('color', new THREE.Float32BufferAttribute(colors6, 3));
+
+            const surfaceMaterial6 = new THREE.MeshPhongMaterial({ 
+                vertexColors: true,
+                side: THREE.DoubleSide,
+                shininess: 100,
+                flatShading: false
+            });
+            surfaceGeometry6.computeVertexNormals();
+            const surface6 = new THREE.Mesh(surfaceGeometry6, surfaceMaterial6);
+            scene6.add(surface6);
+
+            // Ejes y grid
+            scene6.add(new THREE.AxesHelper(5));
+            scene6.add(new THREE.GridHelper(10, 10, 0x888888, 0xcccccc));
+
+            camera6.position.set(12, 10, 12);
+            camera6.lookAt(0, 0, 0);
+
+            // Animación de rotación
+            let angle6 = 0;
+            function animate6() {
+                requestAnimationFrame(animate6);
+                angle6 += 0.007;
+                camera6.position.x = 12 * Math.cos(angle6);
+                camera6.position.z = 12 * Math.sin(angle6);
+                camera6.lookAt(0, 0, 0);
+                renderer6.render(scene6, camera6);
+            }
+            animate6();
+
+            // ============================================
+            // EJEMPLO 7: MAPA DE CALOR 3D
+            // ============================================
+            // Superficie 3D donde la altura y el color representan la intensidad
+            const container7 = document.getElementById('chart7');
+            const scene7 = new THREE.Scene();
+            const camera7 = new THREE.PerspectiveCamera(75, container7.clientWidth / container7.clientHeight, 0.1, 1000);
+            const renderer7 = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer7.setSize(container7.clientWidth, container7.clientHeight);
+            renderer7.setClearColor(0xffffff, 0);
+            container7.appendChild(renderer7.domElement);
+
+            scene7.add(new THREE.AmbientLight(0xffffff, 0.6));
+            const light7 = new THREE.DirectionalLight(0xffffff, 0.8);
+            light7.position.set(5, 10, 5);
+            scene7.add(light7);
+
+            // Generar datos de mapa de calor (matriz 10x10)
+            const heatmapSize = 10;
+            const heatmapData = [];
+            for (let i = 0; i < heatmapSize; i++) {
+                heatmapData[i] = [];
+                for (let j = 0; j < heatmapSize; j++) {
+                    const x = (i / heatmapSize - 0.5) * 8;
+                    const z = (j / heatmapSize - 0.5) * 8;
+                    const value = Math.sin(x * 0.5) * Math.cos(z * 0.5) * 2 + 2;
+                    heatmapData[i][j] = value;
+                }
+            }
+
+            const heatmapGeometry = new THREE.BufferGeometry();
+            const heatmapPositions = [];
+            const heatmapColors = [];
+            
+            // Calcular min y max de los valores para la escala de colores
+            const allHeatmapValues = heatmapData.flat();
+            const minHeatmapValue = d3.min(allHeatmapValues);
+            const maxHeatmapValue = d3.max(allHeatmapValues);
+            const heatmapColorScale = D3Config.createSequentialScale([minHeatmapValue, maxHeatmapValue]);
+
+            for (let i = 0; i < heatmapSize - 1; i++) {
+                for (let j = 0; j < heatmapSize - 1; j++) {
+                    const x1 = (i / heatmapSize - 0.5) * 8;
+                    const z1 = (j / heatmapSize - 0.5) * 8;
+                    const y1 = heatmapData[i][j];
+                    
+                    const x2 = ((i + 1) / heatmapSize - 0.5) * 8;
+                    const z2 = (j / heatmapSize - 0.5) * 8;
+                    const y2 = heatmapData[i + 1][j];
+                    
+                    const x3 = (i / heatmapSize - 0.5) * 8;
+                    const z3 = ((j + 1) / heatmapSize - 0.5) * 8;
+                    const y3 = heatmapData[i][j + 1];
+                    
+                    const x4 = ((i + 1) / heatmapSize - 0.5) * 8;
+                    const z4 = ((j + 1) / heatmapSize - 0.5) * 8;
+                    const y4 = heatmapData[i + 1][j + 1];
+
+                    // Triángulo 1: cada vértice necesita su color basado en su altura Y
+                    const tri1Points = [[x1, y1, z1], [x2, y2, z2], [x3, y3, z3]];
+                    tri1Points.forEach(point => {
+                        heatmapPositions.push(point[0], point[1], point[2]);
+                        const colorStr = heatmapColorScale(point[1]);
+                        const color = new THREE.Color(colorStr);
+                        heatmapColors.push(color.r, color.g, color.b);
+                    });
+
+                    // Triángulo 2
+                    const tri2Points = [[x2, y2, z2], [x4, y4, z4], [x3, y3, z3]];
+                    tri2Points.forEach(point => {
+                        heatmapPositions.push(point[0], point[1], point[2]);
+                        const colorStr = heatmapColorScale(point[1]);
+                        const color = new THREE.Color(colorStr);
+                        heatmapColors.push(color.r, color.g, color.b);
+                    });
+                }
+            }
+
+            heatmapGeometry.setAttribute('position', new THREE.Float32BufferAttribute(heatmapPositions, 3));
+            heatmapGeometry.setAttribute('color', new THREE.Float32BufferAttribute(heatmapColors, 3));
+
+            const heatmapMaterial = new THREE.MeshPhongMaterial({ 
+                vertexColors: true,
+                side: THREE.DoubleSide,
+                shininess: 100,
+                flatShading: false
+            });
+            heatmapGeometry.computeVertexNormals();
+            const heatmapMesh = new THREE.Mesh(heatmapGeometry, heatmapMaterial);
+            scene7.add(heatmapMesh);
+
+            scene7.add(new THREE.AxesHelper(5));
+            scene7.add(new THREE.GridHelper(10, 10, 0x888888, 0xcccccc));
+
+            camera7.position.set(12, 10, 12);
+            camera7.lookAt(0, 0, 0);
+
+            let angle7 = 0;
+            function animate7() {
+                requestAnimationFrame(animate7);
+                angle7 += 0.007;
+                camera7.position.x = 12 * Math.cos(angle7);
+                camera7.position.z = 12 * Math.sin(angle7);
+                camera7.lookAt(0, 0, 0);
+                renderer7.render(scene7, camera7);
+            }
+            animate7();
+
+            // ============================================
+            // EJEMPLO 8: HISTOGRAMA 3D
+            // ============================================
+            // Barras 3D representando distribución de frecuencias
+            const container8 = document.getElementById('chart8');
+            const scene8 = new THREE.Scene();
+            const camera8 = new THREE.PerspectiveCamera(75, container8.clientWidth / container8.clientHeight, 0.1, 1000);
+            const renderer8 = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer8.setSize(container8.clientWidth, container8.clientHeight);
+            renderer8.setClearColor(0xffffff, 0);
+            container8.appendChild(renderer8.domElement);
+
+            scene8.add(new THREE.AmbientLight(0xffffff, 0.6));
+            const light8 = new THREE.DirectionalLight(0xffffff, 0.8);
+            light8.position.set(5, 10, 5);
+            scene8.add(light8);
+
+            // Generar datos de histograma
+            const histogram3DData = Array.from({ length: 15 }, () => Math.random() * 50 + 10);
+            const histogram3D = d3.histogram()
+                .domain(d3.extent(histogram3DData))
+                .thresholds(10);
+
+            const bins8 = histogram3D(histogram3DData);
+            const maxFreq8 = d3.max(bins8, d => d.length);
+            const xScale8 = d3.scaleBand()
+                .domain(bins8.map((_, i) => i))
+                .range([-4, 4])
+                .padding(0.2);
+            const yScale8 = d3.scaleLinear()
+                .domain([0, maxFreq8])
+                .range([0, 3]);
+            const colorScale8 = D3Config.createSequentialScale([0, maxFreq8]);
+
+            bins8.forEach((bin, i) => {
+                const height = yScale8(bin.length);
+                const geometry = new THREE.BoxGeometry(xScale8.bandwidth(), height, 0.3);
+                const material = new THREE.MeshPhongMaterial({ 
+                    color: new THREE.Color(colorScale8(bin.length)),
+                    shininess: 100
+                });
+                const bar = new THREE.Mesh(geometry, material);
+                bar.position.set(xScale8(i), height / 2, 0);
+                scene8.add(bar);
+            });
+
+            scene8.add(new THREE.AxesHelper(5));
+            scene8.add(new THREE.GridHelper(10, 10, 0x888888, 0xcccccc));
+
+            camera8.position.set(8, 8, 8);
+            camera8.lookAt(0, 0, 0);
+
+            let angle8 = 0;
+            function animate8() {
+                requestAnimationFrame(animate8);
+                angle8 += 0.006;
+                camera8.position.x = 8 * Math.cos(angle8);
+                camera8.position.z = 8 * Math.sin(angle8);
+                camera8.lookAt(0, 0, 0);
+                renderer8.render(scene8, camera8);
+            }
+            animate8();
+
+            // ============================================
+            // EJEMPLO 9: BOXPLOT 3D
+            // ============================================
+            // Diagramas de caja 3D para múltiples grupos
+            const container9 = document.getElementById('chart9');
+            const scene9 = new THREE.Scene();
+            const camera9 = new THREE.PerspectiveCamera(75, container9.clientWidth / container9.clientHeight, 0.1, 1000);
+            const renderer9 = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer9.setSize(container9.clientWidth, container9.clientHeight);
+            renderer9.setClearColor(0xffffff, 0);
+            container9.appendChild(renderer9.domElement);
+
+            scene9.add(new THREE.AmbientLight(0xffffff, 0.6));
+            const light9 = new THREE.DirectionalLight(0xffffff, 0.8);
+            light9.position.set(5, 10, 5);
+            scene9.add(light9);
+
+            // Datos para 3 grupos
+            const groups9 = ['A', 'B', 'C'];
+            const boxplot3DData = groups9.map(() => 
+                Array.from({ length: 20 }, () => Math.random() * 30 + 20)
+            );
+
+            function calculateBoxplotStats(values) {
+                const sorted = [...values].sort((a, b) => a - b);
+                const q1 = d3.quantile(sorted, 0.25);
+                const median = d3.quantile(sorted, 0.5);
+                const q3 = d3.quantile(sorted, 0.75);
+                const iqr = q3 - q1;
+                return { q1, median, q3, iqr, min: d3.min(sorted), max: d3.max(sorted) };
+            }
+
+            const xScale9 = d3.scaleBand()
+                .domain(groups9.map((_, i) => i))
+                .range([-3, 3])
+                .padding(0.3);
+            const yScale9 = d3.scaleLinear()
+                .domain([0, 60])
+                .range([0, 3]);
+            const colors9 = [0x4a90e2, 0x50c878, 0xf39c12];
+
+            groups9.forEach((group, i) => {
+                const stats = calculateBoxplotStats(boxplot3DData[i]);
+                const x = xScale9(i);
+                const boxWidth = xScale9.bandwidth() * 0.6;
+                const boxDepth = 0.3;
+
+                // Caja (Q1 a Q3)
+                const boxHeight = yScale9(stats.q3) - yScale9(stats.q1);
+                const boxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+                const boxMaterial = new THREE.MeshPhongMaterial({ 
+                    color: colors9[i],
+                    opacity: 0.7,
+                    transparent: true,
+                    shininess: 100
+                });
+                const box = new THREE.Mesh(boxGeometry, boxMaterial);
+                box.position.set(x, yScale9(stats.q1) + boxHeight / 2, 0);
+                scene9.add(box);
+
+                // Mediana (línea)
+                const medianGeometry = new THREE.BoxGeometry(boxWidth, 0.05, boxDepth);
+                const medianMaterial = new THREE.MeshBasicMaterial({ color: 0x333333 });
+                const median = new THREE.Mesh(medianGeometry, medianMaterial);
+                median.position.set(x, yScale9(stats.median), 0);
+                scene9.add(median);
+
+                // Bigotes (min a max)
+                const whiskerGeometry = new THREE.BoxGeometry(0.02, yScale9(stats.max) - yScale9(stats.min), 0.02);
+                const whiskerMaterial = new THREE.MeshBasicMaterial({ color: 0x333333 });
+                const whisker = new THREE.Mesh(whiskerGeometry, whiskerMaterial);
+                whisker.position.set(x, (yScale9(stats.min) + yScale9(stats.max)) / 2, 0);
+                scene9.add(whisker);
+            });
+
+            scene9.add(new THREE.AxesHelper(5));
+            scene9.add(new THREE.GridHelper(10, 10, 0x888888, 0xcccccc));
+
+            camera9.position.set(8, 8, 8);
+            camera9.lookAt(0, 0, 0);
+
+            let angle9 = 0;
+            function animate9() {
+                requestAnimationFrame(animate9);
+                angle9 += 0.006;
+                camera9.position.x = 8 * Math.cos(angle9);
+                camera9.position.z = 8 * Math.sin(angle9);
+                camera9.lookAt(0, 0, 0);
+                renderer9.render(scene9, camera9);
+            }
+            animate9();
+
+            // ============================================
+            // EJEMPLO 10: PARETO 3D
+            // ============================================
+            // Barras 3D ordenadas por valor con línea acumulativa
+            const container10 = document.getElementById('chart10');
+            const scene10 = new THREE.Scene();
+            const camera10 = new THREE.PerspectiveCamera(75, container10.clientWidth / container10.clientHeight, 0.1, 1000);
+            const renderer10 = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer10.setSize(container10.clientWidth, container10.clientHeight);
+            renderer10.setClearColor(0xffffff, 0);
+            container10.appendChild(renderer10.domElement);
+
+            scene10.add(new THREE.AmbientLight(0xffffff, 0.6));
+            const light10 = new THREE.DirectionalLight(0xffffff, 0.8);
+            light10.position.set(5, 10, 5);
+            scene10.add(light10);
+
+            // Datos ordenados por valor
+            const pareto3DData = [
+                { label: 'A', value: 45 },
+                { label: 'B', value: 35 },
+                { label: 'C', value: 25 },
+                { label: 'D', value: 20 },
+                { label: 'E', value: 15 }
+            ].sort((a, b) => b.value - a.value);
+
+            const total10 = d3.sum(pareto3DData, d => d.value);
+            let cumulative10 = 0;
+            const pareto3DProcessed = pareto3DData.map(d => {
+                cumulative10 += d.value;
+                return { ...d, cumulative: cumulative10 / total10 };
+            });
+
+            const xScale10 = d3.scaleBand()
+                .domain(pareto3DProcessed.map((_, i) => i))
+                .range([-4, 4])
+                .padding(0.2);
+            const yScale10 = d3.scaleLinear()
+                .domain([0, d3.max(pareto3DProcessed, d => d.value)])
+                .range([0, 3]);
+            const zScale10 = d3.scaleLinear()
+                .domain([0, 1])
+                .range([0, 2]);
+            const colorScale10 = D3Config.createSequentialScale([0, d3.max(pareto3DProcessed, d => d.value)]);
+
+            pareto3DProcessed.forEach((d, i) => {
+                const height = yScale10(d.value);
+                const geometry = new THREE.BoxGeometry(xScale10.bandwidth(), height, 0.3);
+                const material = new THREE.MeshPhongMaterial({ 
+                    color: new THREE.Color(colorScale10(d.value)),
+                    shininess: 100
+                });
+                const bar = new THREE.Mesh(geometry, material);
+                bar.position.set(xScale10(i), height / 2, 0);
+                scene10.add(bar);
+
+                // Línea acumulativa (esfera en el punto acumulativo)
+                const sphereGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+                const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0xf39c12 });
+                const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+                sphere.position.set(xScale10(i), yScale10(d.value) + 0.2, zScale10(d.cumulative));
+                scene10.add(sphere);
+            });
+
+            scene10.add(new THREE.AxesHelper(5));
+            scene10.add(new THREE.GridHelper(10, 10, 0x888888, 0xcccccc));
+
+            camera10.position.set(8, 6, 8);
+            camera10.lookAt(0, 0, 0);
+
+            let angle10 = 0;
+            function animate10() {
+                requestAnimationFrame(animate10);
+                angle10 += 0.006;
+                camera10.position.x = 8 * Math.cos(angle10);
+                camera10.position.z = 8 * Math.sin(angle10);
+                camera10.lookAt(0, 0, 0);
+                renderer10.render(scene10, camera10);
+            }
+            animate10();
+
+            // ============================================
+            // EJEMPLO 11: CASCADA 3D
+            // ============================================
+            // Barras 3D mostrando cambios acumulativos
+            const container11 = document.getElementById('chart11');
+            const scene11 = new THREE.Scene();
+            const camera11 = new THREE.PerspectiveCamera(75, container11.clientWidth / container11.clientHeight, 0.1, 1000);
+            const renderer11 = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer11.setSize(container11.clientWidth, container11.clientHeight);
+            renderer11.setClearColor(0xffffff, 0);
+            container11.appendChild(renderer11.domElement);
+
+            scene11.add(new THREE.AmbientLight(0xffffff, 0.6));
+            const light11 = new THREE.DirectionalLight(0xffffff, 0.8);
+            light11.position.set(5, 10, 5);
+            scene11.add(light11);
+
+            const waterfall3DData = [
+                { label: 'Inicio', value: 100, type: 'start' },
+                { label: 'A', value: 30, type: 'positive' },
+                { label: 'B', value: -20, type: 'negative' },
+                { label: 'C', value: 40, type: 'positive' },
+                { label: 'D', value: -10, type: 'negative' },
+                { label: 'Final', value: 140, type: 'end' }
+            ];
+
+            let runningTotal11 = 0;
+            const waterfall3DProcessed = waterfall3DData.map(d => {
+                let startY = runningTotal11;
+                if (d.type !== 'end') runningTotal11 += d.value;
+                return { ...d, startY, endY: runningTotal11 };
+            });
+
+            const xScale11 = d3.scaleBand()
+                .domain(waterfall3DProcessed.map((_, i) => i))
+                .range([-4, 4])
+                .padding(0.2);
+            const yScale11 = d3.scaleLinear()
+                .domain([0, d3.max(waterfall3DProcessed, d => Math.max(d.startY, d.endY))])
+                .range([0, 3]);
+
+            waterfall3DProcessed.forEach((d, i) => {
+                if (d.type === 'end') return;
+                
+                const height = Math.abs(yScale11(d.endY) - yScale11(d.startY));
+                const geometry = new THREE.BoxGeometry(xScale11.bandwidth() * 0.6, height, 0.3);
+                const material = new THREE.MeshPhongMaterial({ 
+                    color: d.type === 'positive' ? 0x4caf50 : d.type === 'negative' ? 0xf44336 : 0x9e9e9e,
+                    shininess: 100
+                });
+                const bar = new THREE.Mesh(geometry, material);
+                bar.position.set(xScale11(i), (yScale11(d.startY) + yScale11(d.endY)) / 2, 0);
+                scene11.add(bar);
+            });
+
+            scene11.add(new THREE.AxesHelper(5));
+            scene11.add(new THREE.GridHelper(10, 10, 0x888888, 0xcccccc));
+
+            camera11.position.set(8, 8, 8);
+            camera11.lookAt(0, 0, 0);
+
+            let angle11 = 0;
+            function animate11() {
+                requestAnimationFrame(animate11);
+                angle11 += 0.006;
+                camera11.position.x = 8 * Math.cos(angle11);
+                camera11.position.z = 8 * Math.sin(angle11);
+                camera11.lookAt(0, 0, 0);
+                renderer11.render(scene11, camera11);
+            }
+            animate11();
+
+            // ============================================
+            // EJEMPLO 12: KDE 3D (Superficie de Densidad)
+            // ============================================
+            // Superficie 3D representando estimación de densidad
+            const container12 = document.getElementById('chart12');
+            const scene12 = new THREE.Scene();
+            const camera12 = new THREE.PerspectiveCamera(75, container12.clientWidth / container12.clientHeight, 0.1, 1000);
+            const renderer12 = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer12.setSize(container12.clientWidth, container12.clientHeight);
+            renderer12.setClearColor(0xffffff, 0);
+            container12.appendChild(renderer12.domElement);
+
+            scene12.add(new THREE.AmbientLight(0xffffff, 0.6));
+            const light12 = new THREE.DirectionalLight(0xffffff, 0.8);
+            light12.position.set(5, 10, 5);
+            scene12.add(light12);
+
+            // Generar datos y calcular KDE
+            const kde3DData = Array.from({ length: 100 }, () => 
+                d3.randomNormal(50, 15)()
+            );
+
+            function kde3DCalculate(x, data, bandwidth) {
+                return d3.mean(data, d => {
+                    const u = (x - d) / bandwidth;
+                    return Math.abs(u) <= 1 ? 0.75 * (1 - u * u) / bandwidth : 0;
+                });
+            }
+
+            const bandwidth12 = 3.49 * d3.deviation(kde3DData) * Math.pow(kde3DData.length, -1/3);
+            const minX = d3.min(kde3DData) - bandwidth12;
+            const maxX = d3.max(kde3DData) + bandwidth12;
+            const xRange = d3.range(minX, maxX, (maxX - minX) / 100);
+            const kde3DValues = xRange.map(x => kde3DCalculate(x, kde3DData, bandwidth12));
+            const maxDensity = d3.max(kde3DValues);
+
+            // Escalar coordenadas para visualización
+            const xScale12 = d3.scaleLinear()
+                .domain([minX, maxX])
+                .range([-4, 4]);
+            const yScale12 = d3.scaleLinear()
+                .domain([0, maxDensity])
+                .range([0, 3]);
+            const kde3DColorScale = D3Config.createSequentialScale([0, maxDensity]);
+
+            const kde3DGeometry = new THREE.BufferGeometry();
+            const kde3DPositions = [];
+            const kde3DColors = [];
+
+            // Crear superficie de densidad 3D: curva que se extiende en el eje Z
+            const zDepth = 2; // Profundidad en el eje Z
+            const zSteps = 10; // Número de pasos en el eje Z para crear grosor
+            
+            for (let zIdx = 0; zIdx < zSteps; zIdx++) {
+                const z = (zIdx / zSteps - 0.5) * zDepth;
+                const zNext = ((zIdx + 1) / zSteps - 0.5) * zDepth;
+                
+                for (let i = 0; i < xRange.length - 1; i++) {
+                    const x1 = xScale12(xRange[i]);
+                    const y1 = yScale12(kde3DValues[i]);
+                    const x2 = xScale12(xRange[i + 1]);
+                    const y2 = yScale12(kde3DValues[i + 1]);
+                    const density1 = kde3DValues[i];
+                    const density2 = kde3DValues[i + 1];
+
+                    // Triángulo 1: crear superficie que conecta los puntos
+                    const tri1Points = [
+                        [x1, y1, z],
+                        [x2, y2, z],
+                        [x1, y1, zNext]
+                    ];
+                    tri1Points.forEach((point, idx) => {
+                        kde3DPositions.push(point[0], point[1], point[2]);
+                        const density = idx === 1 ? density2 : density1;
+                        const color = new THREE.Color(kde3DColorScale(density));
+                        kde3DColors.push(color.r, color.g, color.b);
+                    });
+
+                    // Triángulo 2: completar el cuadrado
+                    const tri2Points = [
+                        [x2, y2, z],
+                        [x2, y2, zNext],
+                        [x1, y1, zNext]
+                    ];
+                    tri2Points.forEach((point, idx) => {
+                        kde3DPositions.push(point[0], point[1], point[2]);
+                        const density = idx === 0 ? density2 : density1;
+                        const color = new THREE.Color(kde3DColorScale(density));
+                        kde3DColors.push(color.r, color.g, color.b);
+                    });
+                }
+            }
+            
+            // Agregar base plana para mejor visualización
+            const baseGeometry = new THREE.BufferGeometry();
+            const basePositions = [];
+            const baseColors = [];
+            
+            for (let i = 0; i < xRange.length - 1; i++) {
+                const x1 = xScale12(xRange[i]);
+                const x2 = xScale12(xRange[i + 1]);
+                const z1 = -zDepth / 2;
+                const z2 = zDepth / 2;
+                
+                // Triángulo base 1
+                [[x1, 0, z1], [x2, 0, z1], [x1, 0, z2]].forEach(point => {
+                    basePositions.push(point[0], point[1], point[2]);
+                    baseColors.push(0.9, 0.9, 0.9); // Gris claro
+                });
+                
+                // Triángulo base 2
+                [[x2, 0, z1], [x2, 0, z2], [x1, 0, z2]].forEach(point => {
+                    basePositions.push(point[0], point[1], point[2]);
+                    baseColors.push(0.9, 0.9, 0.9);
+                });
+            }
+            
+            baseGeometry.setAttribute('position', new THREE.Float32BufferAttribute(basePositions, 3));
+            baseGeometry.setAttribute('color', new THREE.Float32BufferAttribute(baseColors, 3));
+            
+            const baseMaterial = new THREE.MeshPhongMaterial({ 
+                vertexColors: true,
+                side: THREE.DoubleSide,
+                shininess: 50
+            });
+            const baseMesh = new THREE.Mesh(baseGeometry, baseMaterial);
+            scene12.add(baseMesh);
+
+            kde3DGeometry.setAttribute('position', new THREE.Float32BufferAttribute(kde3DPositions, 3));
+            kde3DGeometry.setAttribute('color', new THREE.Float32BufferAttribute(kde3DColors, 3));
+
+            const kde3DMaterial = new THREE.MeshPhongMaterial({ 
+                vertexColors: true,
+                side: THREE.DoubleSide,
+                shininess: 100,
+                flatShading: false
+            });
+            kde3DGeometry.computeVertexNormals();
+            const kde3DMesh = new THREE.Mesh(kde3DGeometry, kde3DMaterial);
+            scene12.add(kde3DMesh);
+
+            scene12.add(new THREE.AxesHelper(5));
+            scene12.add(new THREE.GridHelper(10, 10, 0x888888, 0xcccccc));
+
+            camera12.position.set(10, 8, 10);
+            camera12.lookAt(0, 0, 0);
+
+            let angle12 = 0;
+            function animate12() {
+                requestAnimationFrame(animate12);
+                angle12 += 0.007;
+                camera12.position.x = 10 * Math.cos(angle12);
+                camera12.position.z = 10 * Math.sin(angle12);
+                camera12.lookAt(0, 0, 0);
+                renderer12.render(scene12, camera12);
+            }
+            animate12();
+
+            // ============================================
+            // EJEMPLO 13: RADAR 3D
+            // ============================================
+            // Gráfico de radar en 3D con múltiples dimensiones
+            const container13 = document.getElementById('chart13');
+            const scene13 = new THREE.Scene();
+            const camera13 = new THREE.PerspectiveCamera(75, container13.clientWidth / container13.clientHeight, 0.1, 1000);
+            const renderer13 = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer13.setSize(container13.clientWidth, container13.clientHeight);
+            renderer13.setClearColor(0xffffff, 0);
+            container13.appendChild(renderer13.domElement);
+
+            scene13.add(new THREE.AmbientLight(0xffffff, 0.6));
+            const light13 = new THREE.DirectionalLight(0xffffff, 0.8);
+            light13.position.set(5, 10, 5);
+            scene13.add(light13);
+
+            // Datos de radar (6 dimensiones)
+            const radar3DDimensions = ['A', 'B', 'C', 'D', 'E', 'F'];
+            const radar3DValues = [80, 60, 90, 70, 85, 75];
+            const radius13 = 2;
+            const angleStep13 = (2 * Math.PI) / radar3DDimensions.length;
+            const rScale13 = d3.scaleLinear().domain([0, 100]).range([0, radius13]);
+
+            // Crear polígono 3D
+            const radar3DPoints = radar3DDimensions.map((dim, i) => {
+                const angle = i * angleStep13 - Math.PI / 2;
+                const r = rScale13(radar3DValues[i]);
+                return {
+                    x: Math.cos(angle) * r,
+                    y: Math.sin(angle) * r,
+                    z: 0
+                };
+            });
+
+            // Crear superficie del polígono
+            const radar3DGeometry = new THREE.BufferGeometry();
+            const radar3DPositions = [];
+            const radar3DColors = [];
+
+            // Triangulación desde el centro
+            for (let i = 0; i < radar3DPoints.length; i++) {
+                const next = (i + 1) % radar3DPoints.length;
+                [0, 0, 0, radar3DPoints[i].x, radar3DPoints[i].y, radar3DPoints[i].z, 
+                 radar3DPoints[next].x, radar3DPoints[next].y, radar3DPoints[next].z].forEach((coord, idx) => {
+                    radar3DPositions.push(coord);
+                    if (idx % 3 === 0) {
+                        const color = new THREE.Color(0x4a90e2);
+                        radar3DColors.push(color.r, color.g, color.b);
+                    }
+                });
+            }
+
+            radar3DGeometry.setAttribute('position', new THREE.Float32BufferAttribute(radar3DPositions, 3));
+            radar3DGeometry.setAttribute('color', new THREE.Float32BufferAttribute(radar3DColors, 3));
+
+            const radar3DMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x4a90e2,
+                opacity: 0.5,
+                transparent: true,
+                side: THREE.DoubleSide,
+                shininess: 100
+            });
+            const radar3DMesh = new THREE.Mesh(radar3DGeometry, radar3DMaterial);
+            scene13.add(radar3DMesh);
+
+            // Líneas del polígono
+            const lineGeometry = new THREE.BufferGeometry();
+            const linePositions = [];
+            radar3DPoints.forEach((point, i) => {
+                linePositions.push(0, 0, 0);
+                linePositions.push(point.x, point.y, point.z);
+            });
+            lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(linePositions, 3));
+            const lineMaterial = new THREE.LineBasicMaterial({ color: 0x357abd, linewidth: 2 });
+            const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
+            scene13.add(lines);
+
+            // Puntos en los vértices
+            radar3DPoints.forEach(point => {
+                const sphereGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+                const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0x357abd });
+                const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+                sphere.position.set(point.x, point.y, point.z);
+                scene13.add(sphere);
+            });
+
+            scene13.add(new THREE.AxesHelper(3));
+            scene13.add(new THREE.GridHelper(6, 6, 0x888888, 0xcccccc));
+
+            camera13.position.set(6, 6, 6);
+            camera13.lookAt(0, 0, 0);
+
+            let angle13 = 0;
+            function animate13() {
+                requestAnimationFrame(animate13);
+                angle13 += 0.008;
+                camera13.position.x = 6 * Math.cos(angle13);
+                camera13.position.z = 6 * Math.sin(angle13);
+                camera13.lookAt(0, 0, 0);
+                renderer13.render(scene13, camera13);
+            }
+            animate13();
+
+            // Manejo de redimensionamiento para todos los gráficos
+            window.addEventListener('resize', () => {
+                const containers = [container1, container2, container3, container4, container5, container6,
+                                  container7, container8, container9, container10, container11, container12, container13];
+                const cameras = [camera1, camera2, camera3, camera4, camera5, camera6,
+                               camera7, camera8, camera9, camera10, camera11, camera12, camera13];
+                const renderers = [renderer1, renderer2, renderer3, renderer4, renderer5, renderer6,
+                                 renderer7, renderer8, renderer9, renderer10, renderer11, renderer12, renderer13];
+                
+                containers.forEach((container, idx) => {
+                    cameras[idx].aspect = container.clientWidth / container.clientHeight;
+                    cameras[idx].updateProjectionMatrix();
+                    renderers[idx].setSize(container.clientWidth, container.clientHeight);
+                });
+            });
+        </script>
+    </div>
+</body>
+</html>
+

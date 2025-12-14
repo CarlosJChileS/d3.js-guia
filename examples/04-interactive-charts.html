@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gráficos Interactivos</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <div class="example-page">
+        <a href="../index.html" class="back-link">← Volver al índice</a>
+        
+        <div class="example-header">
+            <h1>4. Gráficos Interactivos</h1>
+            <p>Tooltips, zoom, pan, brush, animaciones y eventos</p>
+        </div>
+
+        <div class="chart-container">
+            <h2>Tooltips Dinámicos</h2>
+            <p>Información contextual al pasar el mouse sobre los elementos.</p>
+            <div id="chart1" class="chart-wrapper"></div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Zoom y Pan</h2>
+            <p>Navegación interactiva con zoom y desplazamiento.</p>
+            <div id="chart2" class="chart-wrapper"></div>
+            <p><small>Usa la rueda del mouse para hacer zoom y arrastra para pan</small></p>
+        </div>
+
+        <div class="chart-container">
+            <h2>Brush para Selección</h2>
+            <p>Selecciona un rango de datos arrastrando el mouse.</p>
+            <div id="chart3" class="chart-wrapper"></div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Animaciones y Transiciones</h2>
+            <p>Transiciones suaves entre estados del gráfico.</p>
+            <div id="chart4" class="chart-wrapper"></div>
+            <button id="updateData" style="margin-top: 15px; padding: 10px 20px; background: var(--accent); color: white; border: none; border-radius: 5px; cursor: pointer;">Actualizar Datos</button>
+        </div>
+
+        <script src="../js/config.js"></script>
+        <script src="../js/utils.js"></script>
+        <script>
+            // Ejemplo 1: Tooltips dinámicos
+            const data1 = [
+                { category: 'A', value: 30 },
+                { category: 'B', value: 80 },
+                { category: 'C', value: 45 },
+                { category: 'D', value: 60 },
+                { category: 'E', value: 25 }
+            ];
+
+            const { svg: svg1, g: g1, dims: dims1 } = createSVG('#chart1', 600, 400);
+            const tooltip1 = createTooltip('body');
+
+            const xScale1 = d3.scaleBand()
+                .domain(data1.map(d => d.category))
+                .range([0, dims1.innerWidth])
+                .padding(0.2);
+
+            const yScale1 = d3.scaleLinear()
+                .domain([0, d3.max(data1, d => d.value)])
+                .nice()
+                .range([dims1.innerHeight, 0]);
+
+            g1.selectAll('rect')
+                .data(data1)
+                .enter()
+                .append('rect')
+                .attr('x', d => xScale1(d.category))
+                .attr('y', d => yScale1(d.value))
+                .attr('width', xScale1.bandwidth())
+                .attr('height', d => dims1.innerHeight - yScale1(d.value))
+                .style('fill', '#4a90e2')
+                .style('cursor', 'pointer')
+                .on('mouseover', function(event, d) {
+                    d3.select(this).style('fill', '#357abd').style('opacity', 0.8);
+                    showTooltip(tooltip1, `
+                        <strong>Categoría:</strong> ${d.category}<br>
+                        <strong>Valor:</strong> ${d.value}
+                    `, event);
+                })
+                .on('mousemove', function(event) {
+                    showTooltip(tooltip1, tooltip1.html(), event);
+                })
+                .on('mouseout', function() {
+                    d3.select(this).style('fill', '#4a90e2').style('opacity', 1);
+                    hideTooltip(tooltip1);
+                });
+
+            createAxes(g1, xScale1, yScale1, dims1, {
+                xLabel: 'Categorías',
+                yLabel: 'Valores'
+            });
+
+            // Ejemplo 2: Zoom y Pan
+            const data2 = d3.range(100).map(i => ({
+                x: i,
+                y: Math.sin(i / 10) * 50 + 50 + Math.random() * 20
+            }));
+
+            const { svg: svg2, g: g2, dims: dims2 } = createSVG('#chart2', 800, 400);
+
+            const xScale2 = d3.scaleLinear()
+                .domain([0, 100])
+                .range([0, dims2.innerWidth]);
+
+            const yScale2 = d3.scaleLinear()
+                .domain([0, 120])
+                .range([dims2.innerHeight, 0]);
+
+            const line = d3.line()
+                .x(d => xScale2(d.x))
+                .y(d => yScale2(d.y))
+                .curve(d3.curveMonotoneX);
+
+            g2.append('path')
+                .datum(data2)
+                .attr('fill', 'none')
+                .attr('stroke', '#4a90e2')
+                .attr('stroke-width', 2)
+                .attr('d', line);
+
+            createAxes(g2, xScale2, yScale2, dims2, {
+                xLabel: 'Tiempo',
+                yLabel: 'Valor'
+            });
+
+            // Implementar zoom
+            const zoom = d3.zoom()
+                .scaleExtent([0.5, 10])
+                .on('zoom', (event) => {
+                    const newXScale = event.transform.rescaleX(xScale2);
+                    const newYScale = event.transform.rescaleY(yScale2);
+
+                    g2.select('path')
+                        .attr('d', d3.line()
+                            .x(d => newXScale(d.x))
+                            .y(d => newYScale(d.y))
+                            .curve(d3.curveMonotoneX)
+                        );
+
+                    g2.select('.x-axis').call(d3.axisBottom(newXScale));
+                    g2.select('.y-axis').call(d3.axisLeft(newYScale));
+                });
+
+            svg2.call(zoom);
+
+            // Ejemplo 3: Brush para selección
+            const data3 = d3.range(50).map(i => ({
+                x: i * 2,
+                y: Math.random() * 100
+            }));
+
+            const { svg: svg3, g: g3, dims: dims3 } = createSVG('#chart3', 800, 400);
+
+            const xScale3 = d3.scaleLinear()
+                .domain([0, 100])
+                .range([0, dims3.innerWidth]);
+
+            const yScale3 = d3.scaleLinear()
+                .domain([0, 100])
+                .range([dims3.innerHeight, 0]);
+
+            // Puntos de dispersión
+            g3.selectAll('circle')
+                .data(data3)
+                .enter()
+                .append('circle')
+                .attr('cx', d => xScale3(d.x))
+                .attr('cy', d => yScale3(d.y))
+                .attr('r', 4)
+                .style('fill', '#4a90e2')
+                .style('opacity', 0.6);
+
+            createAxes(g3, xScale3, yScale3, dims3, {
+                xLabel: 'X',
+                yLabel: 'Y'
+            });
+
+            // Brush
+            const brush = d3.brush()
+                .extent([[0, 0], [dims3.innerWidth, dims3.innerHeight]])
+                .on('brush', function(event) {
+                    const selection = event.selection;
+                    if (selection) {
+                        const [[x0, y0], [x1, y1]] = selection;
+                        g3.selectAll('circle')
+                            .style('fill', d => {
+                                const cx = xScale3(d.x);
+                                const cy = yScale3(d.y);
+                                return (cx >= x0 && cx <= x1 && cy >= y0 && cy <= y1) 
+                                    ? '#f39c12' : '#4a90e2';
+                            });
+                    }
+                })
+                .on('end', function(event) {
+                    if (!event.selection) {
+                        g3.selectAll('circle').style('fill', '#4a90e2');
+                    }
+                });
+
+            g3.append('g')
+                .attr('class', 'brush')
+                .call(brush);
+
+            // Ejemplo 4: Animaciones y transiciones
+            let currentData4 = [
+                { category: 'A', value: 30 },
+                { category: 'B', value: 80 },
+                { category: 'C', value: 45 },
+                { category: 'D', value: 60 },
+                { category: 'E', value: 25 }
+            ];
+
+            const { svg: svg4, g: g4, dims: dims4 } = createSVG('#chart4', 600, 400);
+
+            const xScale4 = d3.scaleBand()
+                .domain(currentData4.map(d => d.category))
+                .range([0, dims4.innerWidth])
+                .padding(0.2);
+
+            const yScale4 = d3.scaleLinear()
+                .domain([0, 100])
+                .range([dims4.innerHeight, 0]);
+
+            const bars4 = g4.selectAll('rect')
+                .data(currentData4)
+                .enter()
+                .append('rect')
+                .attr('x', d => xScale4(d.category))
+                .attr('y', dims4.innerHeight)
+                .attr('width', xScale4.bandwidth())
+                .attr('height', 0)
+                .style('fill', '#4a90e2');
+
+            bars4.transition()
+                .duration(1000)
+                .attr('y', d => yScale4(d.value))
+                .attr('height', d => dims4.innerHeight - yScale4(d.value));
+
+            createAxes(g4, xScale4, yScale4, dims4, {
+                xLabel: 'Categorías',
+                yLabel: 'Valores'
+            });
+
+            // Botón para actualizar datos
+            document.getElementById('updateData').addEventListener('click', () => {
+                currentData4 = currentData4.map(d => ({
+                    ...d,
+                    value: Math.random() * 100
+                }));
+
+                yScale4.domain([0, d3.max(currentData4, d => d.value)]).nice();
+
+                bars4.data(currentData4)
+                    .transition()
+                    .duration(1000)
+                    .ease(d3.easeBounceOut)
+                    .attr('y', d => yScale4(d.value))
+                    .attr('height', d => dims4.innerHeight - yScale4(d.value));
+
+                g4.select('.y-axis')
+                    .transition()
+                    .duration(1000)
+                    .call(d3.axisLeft(yScale4));
+            });
+        </script>
+    </div>
+</body>
+</html>
+

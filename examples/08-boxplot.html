@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagramas de Caja y Bigotes</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <div class="example-page">
+        <a href="../index.html" class="back-link">← Volver al índice</a>
+        
+        <div class="example-header">
+            <h1>8. Diagramas de Caja y Bigotes</h1>
+            <p>Visualización de estadísticas descriptivas</p>
+        </div>
+
+        <div class="chart-container">
+            <h2>Boxplot Vertical</h2>
+            <p>Distribución de datos con cuartiles y outliers.</p>
+            <div id="chart1" class="chart-wrapper"></div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Boxplot Horizontal</h2>
+            <p>Boxplot orientado horizontalmente.</p>
+            <div id="chart2" class="chart-wrapper"></div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Boxplot Agrupado</h2>
+            <p>Comparación de múltiples grupos.</p>
+            <div id="chart3" class="chart-wrapper"></div>
+        </div>
+
+        <script src="../js/config.js"></script>
+        <script src="../js/utils.js"></script>
+        <script>
+            // Cargar datos
+            d3.json('../data/sample-data.json').then(data => {
+                const boxplotData = data.boxplotData;
+
+                // Función para calcular estadísticas del boxplot
+                function calculateBoxplotStats(values) {
+                    const sorted = [...values].sort((a, b) => a - b);
+                    const q1 = d3.quantile(sorted, 0.25);
+                    const median = d3.quantile(sorted, 0.5);
+                    const q3 = d3.quantile(sorted, 0.75);
+                    const iqr = q3 - q1;
+                    const min = d3.min(sorted);
+                    const max = d3.max(sorted);
+                    
+                    // Calcular límites para outliers
+                    const lowerWhisker = Math.max(min, q1 - 1.5 * iqr);
+                    const upperWhisker = Math.min(max, q3 + 1.5 * iqr);
+                    
+                    // Identificar outliers
+                    const outliers = sorted.filter(d => d < lowerWhisker || d > upperWhisker);
+                    
+                    return {
+                        q1, median, q3, iqr,
+                        min, max,
+                        lowerWhisker, upperWhisker,
+                        outliers
+                    };
+                }
+
+                // Ejemplo 1: Boxplot vertical
+                const groups1 = Object.keys(boxplotData);
+                const stats1 = groups1.map(group => ({
+                    group,
+                    stats: calculateBoxplotStats(boxplotData[group])
+                }));
+
+                const { svg: svg1, g: g1, dims: dims1 } = createSVG('#chart1', 600, 400);
+
+                const xScale1 = d3.scaleBand()
+                    .domain(groups1)
+                    .range([0, dims1.innerWidth])
+                    .padding(0.3);
+
+                const allValues1 = Object.values(boxplotData).flat();
+                const yScale1 = d3.scaleLinear()
+                    .domain([d3.min(allValues1), d3.max(allValues1)])
+                    .nice()
+                    .range([dims1.innerHeight, 0]);
+
+                const boxWidth = xScale1.bandwidth() * 0.6;
+
+                stats1.forEach(({ group, stats }) => {
+                    const x = xScale1(group) + (xScale1.bandwidth() - boxWidth) / 2;
+
+                    // Bigotes (whiskers)
+                    g1.append('line')
+                        .attr('x1', x + boxWidth / 2)
+                        .attr('x2', x + boxWidth / 2)
+                        .attr('y1', yScale1(stats.lowerWhisker))
+                        .attr('y2', yScale1(stats.upperWhisker))
+                        .style('stroke', '#333')
+                        .style('stroke-width', 2);
+
+                    // Líneas de bigotes
+                    g1.append('line')
+                        .attr('x1', x)
+                        .attr('x2', x + boxWidth)
+                        .attr('y1', yScale1(stats.lowerWhisker))
+                        .attr('y2', yScale1(stats.lowerWhisker))
+                        .style('stroke', '#333')
+                        .style('stroke-width', 2);
+
+                    g1.append('line')
+                        .attr('x1', x)
+                        .attr('x2', x + boxWidth)
+                        .attr('y1', yScale1(stats.upperWhisker))
+                        .attr('y2', yScale1(stats.upperWhisker))
+                        .style('stroke', '#333')
+                        .style('stroke-width', 2);
+
+                    // Caja
+                    g1.append('rect')
+                        .attr('x', x)
+                        .attr('y', yScale1(stats.q3))
+                        .attr('width', boxWidth)
+                        .attr('height', yScale1(stats.q1) - yScale1(stats.q3))
+                        .style('fill', '#4a90e2')
+                        .style('fill-opacity', 0.7)
+                        .style('stroke', '#333')
+                        .style('stroke-width', 2);
+
+                    // Mediana
+                    g1.append('line')
+                        .attr('x1', x)
+                        .attr('x2', x + boxWidth)
+                        .attr('y1', yScale1(stats.median))
+                        .attr('y2', yScale1(stats.median))
+                        .style('stroke', '#333')
+                        .style('stroke-width', 2);
+
+                    // Outliers
+                    stats.outliers.forEach(outlier => {
+                        g1.append('circle')
+                            .attr('cx', x + boxWidth / 2)
+                            .attr('cy', yScale1(outlier))
+                            .attr('r', 4)
+                            .style('fill', '#f44336')
+                            .style('stroke', '#333')
+                            .style('stroke-width', 1);
+                    });
+                });
+
+                createAxes(g1, xScale1, yScale1, dims1, {
+                    xLabel: 'Grupos',
+                    yLabel: 'Valores'
+                });
+
+                // Ejemplo 2: Boxplot horizontal
+                const { svg: svg2, g: g2, dims: dims2 } = createSVG('#chart2', 600, 400);
+
+                const yScale2 = d3.scaleBand()
+                    .domain(groups1)
+                    .range([0, dims2.innerHeight])
+                    .padding(0.3);
+
+                const xScale2 = d3.scaleLinear()
+                    .domain([d3.min(allValues1), d3.max(allValues1)])
+                    .nice()
+                    .range([0, dims2.innerWidth]);
+
+                const boxHeight = yScale2.bandwidth() * 0.6;
+
+                stats1.forEach(({ group, stats }) => {
+                    const y = yScale2(group) + (yScale2.bandwidth() - boxHeight) / 2;
+
+                    // Bigotes
+                    g2.append('line')
+                        .attr('x1', xScale2(stats.lowerWhisker))
+                        .attr('x2', xScale2(stats.upperWhisker))
+                        .attr('y1', y + boxHeight / 2)
+                        .attr('y2', y + boxHeight / 2)
+                        .style('stroke', '#333')
+                        .style('stroke-width', 2);
+
+                    g2.append('line')
+                        .attr('x1', xScale2(stats.lowerWhisker))
+                        .attr('x2', xScale2(stats.lowerWhisker))
+                        .attr('y1', y)
+                        .attr('y2', y + boxHeight)
+                        .style('stroke', '#333')
+                        .style('stroke-width', 2);
+
+                    g2.append('line')
+                        .attr('x1', xScale2(stats.upperWhisker))
+                        .attr('x2', xScale2(stats.upperWhisker))
+                        .attr('y1', y)
+                        .attr('y2', y + boxHeight)
+                        .style('stroke', '#333')
+                        .style('stroke-width', 2);
+
+                    // Caja
+                    g2.append('rect')
+                        .attr('x', xScale2(stats.q1))
+                        .attr('y', y)
+                        .attr('width', xScale2(stats.q3) - xScale2(stats.q1))
+                        .attr('height', boxHeight)
+                        .style('fill', '#50c878')
+                        .style('fill-opacity', 0.7)
+                        .style('stroke', '#333')
+                        .style('stroke-width', 2);
+
+                    // Mediana
+                    g2.append('line')
+                        .attr('x1', xScale2(stats.median))
+                        .attr('x2', xScale2(stats.median))
+                        .attr('y1', y)
+                        .attr('y2', y + boxHeight)
+                        .style('stroke', '#333')
+                        .style('stroke-width', 2);
+
+                    // Outliers
+                    stats.outliers.forEach(outlier => {
+                        g2.append('circle')
+                            .attr('cx', xScale2(outlier))
+                            .attr('cy', y + boxHeight / 2)
+                            .attr('r', 4)
+                            .style('fill', '#f44336')
+                            .style('stroke', '#333')
+                            .style('stroke-width', 1);
+                    });
+                });
+
+                createAxes(g2, xScale2, yScale2, dims2, {
+                    xLabel: 'Valores',
+                    yLabel: 'Grupos'
+                });
+
+                // Ejemplo 3: Boxplot agrupado
+                const { svg: svg3, g: g3, dims: dims3 } = createSVG('#chart3', 700, 400);
+
+                const categories3 = ['Categoría 1', 'Categoría 2', 'Categoría 3'];
+                const groups3 = Object.keys(boxplotData);
+                const allStats3 = categories3.map((cat, catIdx) => 
+                    groups3.map((group, groupIdx) => ({
+                        category: cat,
+                        group: group,
+                        stats: calculateBoxplotStats(boxplotData[group].map(v => v + (catIdx - 1) * 10))
+                    }))
+                ).flat();
+
+                const xScale3 = d3.scaleBand()
+                    .domain(categories3)
+                    .range([0, dims3.innerWidth])
+                    .padding(0.2);
+
+                const groupScale3 = d3.scaleBand()
+                    .domain(groups3)
+                    .range([0, xScale3.bandwidth()])
+                    .padding(0.1);
+
+                const allValues3 = allStats3.flatMap(s => [
+                    s.stats.lowerWhisker,
+                    s.stats.upperWhisker,
+                    ...s.stats.outliers
+                ]);
+
+                const yScale3 = d3.scaleLinear()
+                    .domain([d3.min(allValues3), d3.max(allValues3)])
+                    .nice()
+                    .range([dims3.innerHeight, 0]);
+
+                const colors3 = D3Config.colors.categorical;
+
+                categories3.forEach((cat, catIdx) => {
+                    groups3.forEach((group, groupIdx) => {
+                        const stats = allStats3.find(s => s.category === cat && s.group === group).stats;
+                        const x = xScale3(cat) + groupScale3(group);
+                        const boxWidth3 = groupScale3.bandwidth() * 0.8;
+                        const xCenter = x + groupScale3.bandwidth() / 2;
+
+                        // Bigotes
+                        g3.append('line')
+                            .attr('x1', xCenter)
+                            .attr('x2', xCenter)
+                            .attr('y1', yScale3(stats.lowerWhisker))
+                            .attr('y2', yScale3(stats.upperWhisker))
+                            .style('stroke', '#333')
+                            .style('stroke-width', 1.5);
+
+                        g3.append('line')
+                            .attr('x1', x + (groupScale3.bandwidth() - boxWidth3) / 2)
+                            .attr('x2', x + (groupScale3.bandwidth() - boxWidth3) / 2 + boxWidth3)
+                            .attr('y1', yScale3(stats.lowerWhisker))
+                            .attr('y2', yScale3(stats.lowerWhisker))
+                            .style('stroke', '#333')
+                            .style('stroke-width', 1.5);
+
+                        g3.append('line')
+                            .attr('x1', x + (groupScale3.bandwidth() - boxWidth3) / 2)
+                            .attr('x2', x + (groupScale3.bandwidth() - boxWidth3) / 2 + boxWidth3)
+                            .attr('y1', yScale3(stats.upperWhisker))
+                            .attr('y2', yScale3(stats.upperWhisker))
+                            .style('stroke', '#333')
+                            .style('stroke-width', 1.5);
+
+                        // Caja
+                        g3.append('rect')
+                            .attr('x', x + (groupScale3.bandwidth() - boxWidth3) / 2)
+                            .attr('y', yScale3(stats.q3))
+                            .attr('width', boxWidth3)
+                            .attr('height', yScale3(stats.q1) - yScale3(stats.q3))
+                            .style('fill', colors3[groupIdx])
+                            .style('fill-opacity', 0.7)
+                            .style('stroke', '#333')
+                            .style('stroke-width', 1.5);
+
+                        // Mediana
+                        g3.append('line')
+                            .attr('x1', x + (groupScale3.bandwidth() - boxWidth3) / 2)
+                            .attr('x2', x + (groupScale3.bandwidth() - boxWidth3) / 2 + boxWidth3)
+                            .attr('y1', yScale3(stats.median))
+                            .attr('y2', yScale3(stats.median))
+                            .style('stroke', '#333')
+                            .style('stroke-width', 1.5);
+                    });
+                });
+
+                // Leyenda
+                const legend3 = g3.append('g')
+                    .attr('transform', `translate(${dims3.innerWidth - 150}, 20)`);
+
+                groups3.forEach((group, i) => {
+                    const legendItem = legend3.append('g')
+                        .attr('transform', `translate(0, ${i * 25})`);
+                    
+                    legendItem.append('rect')
+                        .attr('width', 15)
+                        .attr('height', 15)
+                        .style('fill', colors3[i])
+                        .style('fill-opacity', 0.7);
+                    
+                    legendItem.append('text')
+                        .attr('x', 20)
+                        .attr('y', 12)
+                        .style('font-size', '12px')
+                        .text(group);
+                });
+
+                createAxes(g3, xScale3, yScale3, dims3, {
+                    xLabel: 'Categorías',
+                    yLabel: 'Valores'
+                });
+            });
+        </script>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gráficos de Densidad KDE</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <div class="example-page">
+        <a href="../index.html" class="back-link">← Volver al índice</a>
+        
+        <div class="example-header">
+            <h1>13. Gráficos de Densidad KDE</h1>
+            <p>Kernel Density Estimation para estimar distribuciones de probabilidad</p>
+        </div>
+
+        <div class="chart-container">
+            <h2>Curva de Densidad KDE</h2>
+            <p>Estimación de densidad usando kernel gaussiano.</p>
+            <div id="chart1" class="chart-wrapper"></div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Comparación de Distribuciones</h2>
+            <p>Múltiples curvas de densidad superpuestas.</p>
+            <div id="chart2" class="chart-wrapper"></div>
+        </div>
+
+        <script src="../js/config.js"></script>
+        <script src="../js/utils.js"></script>
+        <script src="../js/axes.js"></script>
+        <script>
+            // Esperar a que el DOM esté listo
+            document.addEventListener('DOMContentLoaded', function() {
+                // Verificar que D3 y las funciones estén disponibles
+                if (typeof d3 === 'undefined') {
+                    console.error('D3.js no está cargado');
+                    return;
+                }
+                if (typeof createSVG === 'undefined') {
+                    console.error('createSVG no está disponible');
+                    return;
+                }
+                if (typeof createGrid === 'undefined') {
+                    console.error('createGrid no está disponible');
+                    return;
+                }
+                if (typeof createAxes === 'undefined') {
+                    console.error('createAxes no está disponible');
+                    return;
+                }
+                if (typeof calculateStats === 'undefined') {
+                    console.error('calculateStats no está disponible');
+                    return;
+                }
+                
+                // Función para calcular KDE
+                function calculateKDE(kernel, thresholds, data) {
+                    return thresholds.map(t => [t, d3.mean(data, d => kernel(t - d))]);
+                }
+
+                // Kernel Epanechnikov
+                function epanechnikov(bandwidth) {
+                    return x => Math.abs(x /= bandwidth) <= 1 ? 0.75 * (1 - x * x) / bandwidth : 0;
+                }
+                
+                // Calcular ancho de banda usando la regla de Scott
+                function scottBandwidth(data) {
+                    const n = data.length;
+                    if (n < 2) return 1;
+                    const std = d3.deviation(data);
+                    if (!std || std === 0) return 1;
+                    // Regla de Scott: h = 3.49 * σ * n^(-1/3)
+                    return 3.49 * std * Math.pow(n, -1/3);
+                }
+
+                // Cargar datos
+                d3.json('../data/sample-data.json')
+                    .then(data => {
+                        console.log('Datos JSON cargados:', data);
+                        
+                        if (!data) {
+                            console.error('No se pudieron cargar los datos');
+                            document.querySelectorAll('.chart-wrapper').forEach(wrapper => {
+                                wrapper.innerHTML = '<p style="color: red; padding: 20px;">Error: No se pudieron cargar los datos del servidor.</p>';
+                            });
+                            return;
+                        }
+                        
+                        const kdeData = data.kdeData;
+                        if (!kdeData) {
+                            console.error('No hay datos KDE en el archivo JSON');
+                            console.log('Datos disponibles:', Object.keys(data));
+                            document.querySelectorAll('.chart-wrapper').forEach(wrapper => {
+                                wrapper.innerHTML = '<p style="color: red; padding: 20px;">Error: No se encontraron datos KDE en el archivo JSON.</p>';
+                            });
+                            return;
+                        }
+                        
+                        console.log('Datos KDE cargados:', kdeData);
+
+                        // Ejemplo 1: Curva de densidad KDE
+                        const dist1 = kdeData['Distribución 1'];
+                        
+                        // Verificar que la distribución exista
+                        if (!dist1 || dist1.length === 0) {
+                            console.error('No hay datos para la Distribución 1');
+                            console.log('Datos KDE disponibles:', Object.keys(kdeData));
+                            document.querySelector('#chart1').innerHTML = '<p style="color: red; padding: 20px;">Error: No hay datos para la Distribución 1</p>';
+                            return;
+                        }
+                        
+                        console.log('Distribución 1 cargada:', dist1);
+                        
+                        const { svg: svg1, g: g1, dims: dims1 } = createSVG('#chart1', 700, 400);
+                        
+                        // Calcular ancho de banda (bandwidth)
+                        const bandwidth1 = scottBandwidth(dist1);
+                        const thresholds1 = d3.ticks(d3.min(dist1) - bandwidth1, d3.max(dist1) + bandwidth1, 100);
+                        const kde1 = calculateKDE(epanechnikov(bandwidth1), thresholds1, dist1);
+
+                        const xScale1 = d3.scaleLinear()
+                            .domain(d3.extent(thresholds1))
+                            .range([0, dims1.innerWidth]);
+
+                        const yScale1 = d3.scaleLinear()
+                            .domain([0, d3.max(kde1, d => d[1])])
+                            .nice()
+                            .range([dims1.innerHeight, 0]);
+
+                        createGrid(g1, xScale1, yScale1, dims1);
+
+                        // Área bajo la curva
+                        const area1 = d3.area()
+                            .x(d => xScale1(d[0]))
+                            .y0(dims1.innerHeight)
+                            .y1(d => yScale1(d[1]))
+                            .curve(d3.curveBasis);
+
+                        g1.append('path')
+                            .datum(kde1)
+                            .attr('d', area1)
+                            .style('fill', '#4a90e2')
+                            .style('fill-opacity', 0.5)
+                            .style('stroke', '#357abd')
+                            .style('stroke-width', 2);
+
+                        // Línea de densidad
+                        const line1 = d3.line()
+                            .x(d => xScale1(d[0]))
+                            .y(d => yScale1(d[1]))
+                            .curve(d3.curveBasis);
+
+                        g1.append('path')
+                            .datum(kde1)
+                            .attr('d', line1)
+                            .style('fill', 'none')
+                            .style('stroke', '#357abd')
+                            .style('stroke-width', 2);
+
+                        // Puntos de datos originales
+                        g1.selectAll('circle')
+                            .data(dist1)
+                            .enter()
+                            .append('circle')
+                            .attr('cx', d => xScale1(d))
+                            .attr('cy', dims1.innerHeight)
+                            .attr('r', 3)
+                            .style('fill', '#f39c12')
+                            .style('opacity', 0.5);
+
+                        createAxes(g1, xScale1, yScale1, dims1, {
+                            xLabel: 'Valor',
+                            yLabel: 'Densidad'
+                        });
+
+                        // Ejemplo 2: Comparación de distribuciones
+                        const dist2 = kdeData['Distribución 2'];
+                        if (!dist2 || dist2.length === 0) {
+                            console.error('No hay datos para la Distribución 2');
+                            console.log('Datos KDE disponibles:', Object.keys(kdeData));
+                            document.querySelector('#chart2').innerHTML = '<p style="color: red; padding: 20px;">Error: No hay datos para la Distribución 2</p>';
+                            return;
+                        }
+                        
+                        console.log('Distribución 2 cargada:', dist2);
+                        
+                        const { svg: svg2, g: g2, dims: dims2 } = createSVG('#chart2', 700, 400);
+
+                        const distributions = [
+                            { name: 'Distribución 1', data: dist1, color: '#4a90e2' },
+                            { name: 'Distribución 2', data: dist2, color: '#50c878' }
+                        ];
+
+                        const allValues2 = [...dist1, ...dist2];
+                        const bandwidth2 = scottBandwidth(allValues2);
+                        const thresholds2 = d3.ticks(d3.min(allValues2) - bandwidth2, d3.max(allValues2) + bandwidth2, 100);
+
+                        const xScale2 = d3.scaleLinear()
+                            .domain(d3.extent(thresholds2))
+                            .range([0, dims2.innerWidth]);
+
+                        let maxDensity = 0;
+                        const kdes = distributions.map(dist => {
+                            const kdeResult = calculateKDE(epanechnikov(bandwidth2), thresholds2, dist.data);
+                            maxDensity = Math.max(maxDensity, d3.max(kdeResult, d => d[1]));
+                            return { ...dist, kde: kdeResult };
+                        });
+
+                        const yScale2 = d3.scaleLinear()
+                            .domain([0, maxDensity])
+                            .nice()
+                            .range([dims2.innerHeight, 0]);
+
+                        createGrid(g2, xScale2, yScale2, dims2);
+
+                        // Dibujar cada distribución
+                        kdes.forEach((dist, i) => {
+                            // Área
+                            const area = d3.area()
+                                .x(d => xScale2(d[0]))
+                                .y0(dims2.innerHeight)
+                                .y1(d => yScale2(d[1]))
+                                .curve(d3.curveBasis);
+
+                            g2.append('path')
+                                .datum(dist.kde)
+                                .attr('d', area)
+                                .style('fill', dist.color)
+                                .style('fill-opacity', 0.3)
+                                .style('stroke', dist.color)
+                                .style('stroke-width', 2);
+
+                            // Línea
+                            const line = d3.line()
+                                .x(d => xScale2(d[0]))
+                                .y(d => yScale2(d[1]))
+                                .curve(d3.curveBasis);
+
+                            g2.append('path')
+                                .datum(dist.kde)
+                                .attr('d', line)
+                                .style('fill', 'none')
+                                .style('stroke', dist.color)
+                                .style('stroke-width', 2);
+                        });
+
+                        createAxes(g2, xScale2, yScale2, dims2, {
+                            xLabel: 'Valor',
+                            yLabel: 'Densidad'
+                        });
+
+                        // Leyenda
+                        const legend2 = g2.append('g')
+                            .attr('transform', `translate(${dims2.innerWidth - 200}, 20)`);
+
+                        distributions.forEach((dist, i) => {
+                            const legendItem = legend2.append('g')
+                                .attr('transform', `translate(0, ${i * 25})`);
+                            
+                            legendItem.append('line')
+                                .attr('x1', 0)
+                                .attr('x2', 20)
+                                .attr('y1', 0)
+                                .attr('y2', 0)
+                                .style('stroke', dist.color)
+                                .style('stroke-width', 3);
+                            
+                            legendItem.append('text')
+                                .attr('x', 25)
+                                .attr('y', 5)
+                                .style('font-size', '12px')
+                                .text(dist.name);
+                        });
+
+                        // Estadísticas
+                        const statsText = g2.append('g')
+                            .attr('transform', `translate(20, 20)`);
+
+                        distributions.forEach((dist, i) => {
+                            const stats = calculateStats(dist.data);
+                            const statsGroup = statsText.append('g')
+                                .attr('transform', `translate(0, ${i * 80})`);
+                            
+                            statsGroup.append('text')
+                                .attr('x', 0)
+                                .attr('y', 0)
+                                .style('font-size', '12px')
+                                .style('font-weight', 'bold')
+                                .style('fill', dist.color)
+                                .text(dist.name);
+                            
+                            statsGroup.append('text')
+                                .attr('x', 0)
+                                .attr('y', 15)
+                                .style('font-size', '10px')
+                                .text(`Media: ${d3.format('.2f')(stats.mean)}`);
+                            
+                            statsGroup.append('text')
+                                .attr('x', 0)
+                                .attr('y', 28)
+                                .style('font-size', '10px')
+                                .text(`Mediana: ${d3.format('.2f')(stats.median)}`);
+                            
+                            statsGroup.append('text')
+                                .attr('x', 0)
+                                .attr('y', 41)
+                                .style('font-size', '10px')
+                                .text(`Desv. Est.: ${d3.format('.2f')(stats.std)}`);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error al cargar los datos:', error);
+                        console.error('Detalles del error:', error.message, error.stack);
+                        // Mostrar mensaje de error más detallado
+                        const errorMsg = error.message || 'Error desconocido';
+                        document.querySelectorAll('.chart-wrapper').forEach(wrapper => {
+                            wrapper.innerHTML = `
+                                <p style="color: red; padding: 20px;">
+                                    <strong>Error al cargar los datos:</strong><br>
+                                    ${errorMsg}<br><br>
+                                    <small>Por favor, verifica que:<br>
+                                    1. El servidor esté ejecutándose (http://localhost:8080)<br>
+                                    2. El archivo data/sample-data.json exista<br>
+                                    3. No haya problemas de CORS</small>
+                                </p>
+                            `;
+                        });
+                    });
+            });
+        </script>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,409 @@
+/**
+ * ============================================================================
+ * ARCHIVO: styles.css
+ * ============================================================================
+ * 
+ * PROPÓSITO:
+ * Hoja de estilos global para todo el proyecto D3.js.
+ * Define el diseño, colores, tipografía y estilos responsive.
+ * 
+ * CARACTERÍSTICAS:
+ * - Variables CSS para temas (claro/oscuro)
+ * - Diseño responsive
+ * - Estilos modernos con gradientes y sombras
+ * - Animaciones y transiciones suaves
+ * 
+ * ESTRUCTURA:
+ * 1. Reset CSS básico
+ * 2. Variables CSS (tema claro y oscuro)
+ * 3. Estilos del body y contenedores
+ * 4. Navegación y enlaces
+ * 5. Páginas de ejemplo
+ * 6. Gráficos y contenedores
+ * 7. Responsive design
+ * 
+ * ============================================================================
+ */
+
+/* ============================================================================
+   SECCIÓN 1: RESET CSS BÁSICO
+   ============================================================================
+   Elimina estilos por defecto del navegador para tener control total
+*/
+* {
+    margin: 0;           /* Sin márgenes por defecto */
+    padding: 0;          /* Sin padding por defecto */
+    box-sizing: border-box;  /* Incluye padding y border en width/height */
+}
+
+/* ============================================================================
+   SECCIÓN 2: VARIABLES CSS (TEMA CLARO)
+   ============================================================================
+   Variables CSS permiten cambiar colores fácilmente en todo el proyecto.
+   Se pueden cambiar aquí y se aplicarán automáticamente.
+   
+   USO:
+   - var(--bg-primary): Fondo principal
+   - var(--accent): Color de acento (azul)
+   - var(--text-primary): Color de texto principal
+*/
+:root {
+    /* Colores de fondo */
+    --bg-primary: #ffffff;      /* Fondo principal (blanco) */
+    --bg-secondary: #f5f5f5;    /* Fondo secundario (gris muy claro) */
+    
+    /* Colores de texto */
+    --text-primary: #333333;     /* Texto principal (gris oscuro) */
+    --text-secondary: #666666;   /* Texto secundario (gris medio) */
+    
+    /* Colores de acento */
+    --accent: #4a90e2;           /* Color principal (azul) */
+    --accent-hover: #357abd;     /* Color al pasar el mouse (azul oscuro) */
+    
+    /* Colores de borde y sombra */
+    --border: #e0e0e0;           /* Color de bordes (gris claro) */
+    --shadow: rgba(0, 0, 0, 0.1); /* Color de sombras (negro semitransparente) */
+    
+    /* Colores semánticos */
+    --success: #4caf50;          /* Verde para éxito */
+    --warning: #ff9800;          /* Naranja para advertencias */
+    --error: #f44336;            /* Rojo para errores */
+}
+
+/* ============================================================================
+   SECCIÓN 3: VARIABLES CSS (TEMA OSCURO)
+   ============================================================================
+   Tema oscuro para reducir fatiga visual en ambientes con poca luz.
+   Se activa agregando data-theme="dark" al elemento <html>.
+   
+   NOTA: Actualmente no está implementado el cambio de tema, pero las
+   variables están listas para futuras implementaciones.
+*/
+[data-theme="dark"] {
+    --bg-primary: #1e1e1e;       /* Fondo principal oscuro */
+    --bg-secondary: #2d2d2d;     /* Fondo secundario oscuro */
+    --text-primary: #e0e0e0;     /* Texto claro */
+    --text-secondary: #b0b0b0;   /* Texto secundario claro */
+    --accent: #5ba3f5;            /* Azul más claro para contraste */
+    --accent-hover: #4a90e2;      /* Azul estándar */
+    --border: #404040;            /* Bordes más visibles */
+    --shadow: rgba(0, 0, 0, 0.3); /* Sombras más intensas */
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background-attachment: fixed;
+    color: var(--text-primary);
+    line-height: 1.6;
+    transition: background-color 0.3s, color 0.3s;
+    min-height: 100vh;
+}
+
+[data-theme="dark"] body {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    background-attachment: fixed;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 30px 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 50px;
+    padding: 40px 0;
+    border-bottom: 3px solid var(--accent);
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+    border-radius: 10px;
+    box-shadow: 0 4px 15px var(--shadow);
+}
+
+header h1 {
+    font-size: 2.8em;
+    margin-bottom: 15px;
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.subtitle {
+    color: var(--text-secondary);
+    font-size: 1.2em;
+    font-weight: 300;
+    letter-spacing: 0.5px;
+}
+
+.main-nav {
+    background: var(--bg-secondary);
+    padding: 35px;
+    border-radius: 12px;
+    margin-bottom: 35px;
+    box-shadow: 0 4px 20px var(--shadow);
+    border: 1px solid var(--border);
+}
+
+.main-nav h2 {
+    margin-bottom: 25px;
+    color: var(--accent);
+    font-size: 1.8em;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: -0.3px;
+}
+
+.nav-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 18px;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-list li a {
+    display: flex;
+    align-items: center;
+    padding: 18px 24px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    text-decoration: none;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 500;
+    font-size: 0.95em;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-list li a::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.nav-list li a:hover::before {
+    left: 100%;
+}
+
+.nav-list li a:hover {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+    color: white;
+    border-color: var(--accent);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+}
+
+.info {
+    background: var(--bg-secondary);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px var(--shadow);
+    border: 1px solid var(--border);
+}
+
+.info h2 {
+    margin-bottom: 20px;
+    color: var(--accent);
+    font-size: 1.8em;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+}
+
+.info p {
+    margin-bottom: 15px;
+    color: var(--text-secondary);
+    line-height: 1.8;
+    font-size: 1.05em;
+}
+
+/* Estilos para páginas de ejemplos */
+.example-page {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 30px 20px;
+    background: transparent;
+}
+
+.example-header {
+    margin-bottom: 35px;
+    padding: 25px 30px;
+    border-bottom: 3px solid var(--accent);
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+    border-radius: 10px;
+    box-shadow: 0 4px 15px var(--shadow);
+}
+
+.example-header h1 {
+    font-size: 2.2em;
+    margin-bottom: 12px;
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.example-header p {
+    color: var(--text-secondary);
+    font-size: 1.15em;
+    font-weight: 300;
+    margin: 0;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: 25px;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+}
+
+.back-link:hover {
+    background: linear-gradient(135deg, var(--accent-hover) 0%, var(--accent) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4);
+}
+
+.chart-container {
+    background: var(--bg-secondary);
+    padding: 35px;
+    border-radius: 12px;
+    margin-bottom: 35px;
+    box-shadow: 0 4px 20px var(--shadow);
+    border: 1px solid var(--border);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.chart-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px var(--shadow);
+}
+
+.chart-container h2 {
+    margin-bottom: 15px;
+    color: var(--accent);
+    font-size: 1.6em;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+}
+
+.chart-container p {
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    line-height: 1.7;
+}
+
+.chart-wrapper {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    min-height: 100px;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border: 1px solid rgba(0,0,0,0.05);
+    transition: box-shadow 0.3s;
+}
+
+.chart-wrapper:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+[data-theme="dark"] .chart-wrapper {
+    background: var(--bg-primary);
+    border-color: var(--border);
+}
+
+.code-section {
+    background: var(--bg-secondary);
+    padding: 20px;
+    border-radius: 5px;
+    margin-top: 20px;
+}
+
+.code-section h3 {
+    margin-bottom: 10px;
+    color: var(--accent);
+}
+
+.code-section pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 15px;
+    border-radius: 5px;
+    overflow-x: auto;
+    font-size: 0.9em;
+}
+
+[data-theme="dark"] .code-section pre {
+    background: #1a1a1a;
+}
+
+/* Toggle de tema */
+.theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 15px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    z-index: 1000;
+    transition: background 0.3s;
+}
+
+.theme-toggle:hover {
+    background: var(--accent-hover);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .nav-list {
+        grid-template-columns: 1fr;
+    }
+    
+    header h1 {
+        font-size: 2em;
+    }
+    
+    .chart-wrapper {
+        padding: 10px;
+    }
+}
+
+/* Estilos para tooltips */
+.tooltip {
+    position: absolute;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: 5px;
+    pointer-events: none;
+    font-size: 12px;
+    z-index: 1000;
+}
+
+[data-theme="dark"] .tooltip {
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
+}
+

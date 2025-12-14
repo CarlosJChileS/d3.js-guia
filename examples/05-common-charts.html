@@ -1,0 +1,475 @@
+<!--
+    ============================================================================
+    ARCHIVO: 05-common-charts.html
+    ============================================================================
+    
+    PROPÓSITO:
+    Demuestra los gráficos más comunes y utilizados en visualización de datos:
+    - Gráfico de línea: Para tendencias temporales
+    - Gráfico de barras: Vertical y horizontal
+    - Gráfico de área: Para mostrar acumulación
+    - Gráfico de dispersión: Para relaciones entre variables
+    - Gráfico circular: Pie y Donut para proporciones
+    
+    CONCEPTOS CLAVE:
+    - d3.line(): Generador de líneas para gráficos de línea
+    - d3.area(): Generador de áreas para gráficos de área
+    - d3.scaleTime(): Escala para fechas
+    - d3.pie(): Generador de arcos para gráficos circulares
+    - d3.arc(): Generador de arcos SVG
+    
+    DATOS:
+    - Se cargan desde data/sample-data.json
+    - lineChart, barChart, scatterData, pieData
+    
+    ============================================================================
+-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gráficos Comunes</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <div class="example-page">
+        <a href="../index.html" class="back-link">← Volver al índice</a>
+        
+        <div class="example-header">
+            <h1>5. Gráficos Comunes</h1>
+            <p>Línea, barra, área, dispersión y circular</p>
+        </div>
+
+        <div class="chart-container">
+            <h2>Gráfico de Línea</h2>
+            <p>Visualización de tendencias temporales.</p>
+            <div id="chart1" class="chart-wrapper"></div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Gráfico de Barras</h2>
+            <p>Comparación de valores categóricos (vertical y horizontal).</p>
+            <div id="chart2" class="chart-wrapper"></div>
+            <div id="chart2b" class="chart-wrapper"></div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Gráfico de Área</h2>
+            <p>Área bajo la curva para mostrar acumulación.</p>
+            <div id="chart3" class="chart-wrapper"></div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Gráfico de Dispersión</h2>
+            <p>Relación entre dos variables numéricas.</p>
+            <div id="chart4" class="chart-wrapper"></div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Gráfico Circular (Pie/Donut)</h2>
+            <p>Proporciones de un todo.</p>
+            <div id="chart5" class="chart-wrapper"></div>
+            <div id="chart5b" class="chart-wrapper"></div>
+        </div>
+
+        <script src="../js/config.js"></script>
+        <script src="../js/utils.js"></script>
+        <script src="../js/axes.js"></script>
+        <script>
+            // Esperar a que el DOM esté listo
+            document.addEventListener('DOMContentLoaded', function() {
+                // Verificar que D3 y las funciones estén disponibles
+                if (typeof d3 === 'undefined') {
+                    console.error('D3.js no está cargado');
+                    return;
+                }
+                if (typeof createSVG === 'undefined') {
+                    console.error('createSVG no está disponible');
+                    return;
+                }
+                if (typeof createGrid === 'undefined') {
+                    console.error('createGrid no está disponible');
+                    return;
+                }
+                
+                /**
+                 * ====================================================================
+                 * CARGA DE DATOS
+                 * ====================================================================
+                 * 
+                 * Cargamos los datos desde el archivo JSON usando d3.json()
+                 * Este método retorna una Promise que se resuelve con los datos
+                 * 
+                 * ESTRUCTURA DE DATOS ESPERADA:
+                 * - lineChart: Array de {date, value}
+                 * - barChart: Array de {category, value}
+                 * - scatterData: Array de {x, y, category}
+                 * - pieData: Array de {label, value}
+                 * 
+                 * ====================================================================
+                 */
+                d3.json('../data/sample-data.json')
+                .then(data => {
+                    if (!data) {
+                        console.error('No se pudieron cargar los datos');
+                        return;
+                    }
+                    
+                    console.log('Datos cargados:', data);
+                    
+                    /**
+                     * ====================================================================
+                     * EJEMPLO 1: GRÁFICO DE LÍNEA
+                     * ====================================================================
+                     * 
+                     * PROPÓSITO: Visualizar tendencias a lo largo del tiempo
+                     * 
+                     * COMPONENTES:
+                     * - Escala temporal (scaleTime) para el eje X
+                     * - Escala lineal para el eje Y
+                     * - Generador de línea (d3.line) para crear el path
+                     * - Puntos en cada dato para mejor visibilidad
+                     * 
+                     * TÉCNICAS:
+                     * - d3.extent(): Obtiene min y max de un array
+                     * - d3.line(): Generador de líneas SVG
+                     * - .curve(): Suaviza la línea (curveMonotoneX)
+                     * - new Date(): Convierte string a objeto Date
+                     * 
+                     * ====================================================================
+                     */
+                    
+                    // Obtener datos de línea
+                    const lineData = data.lineChart;
+                    if (!lineData || lineData.length === 0) {
+                        console.error('No hay datos para el gráfico de línea');
+                        return;
+                    }
+                    
+                    // Crear SVG
+                    const { svg: svg1, g: g1, dims: dims1 } = createSVG('#chart1', 700, 400);
+
+                    // Escala X: Temporal (fechas)
+                    // d3.scaleTime(): Escala especializada para fechas
+                    // d3.extent(): Retorna [min, max] del array
+                    // new Date(d.date + '-01'): Convierte "2024-01" a Date (agregamos '-01' para día)
+                    const xScale1 = d3.scaleTime()
+                        .domain(d3.extent(lineData, d => new Date(d.date + '-01')))
+                        .range([0, dims1.innerWidth]);
+
+                    // Escala Y: Lineal (valores numéricos)
+                    const yScale1 = d3.scaleLinear()
+                        .domain([0, d3.max(lineData, d => d.value)])
+                        .nice()  // Redondea los límites para valores "bonitos"
+                        .range([dims1.innerHeight, 0]);
+
+                    // Generador de línea
+                    // d3.line(): Crea una función que genera un path SVG
+                    // .x()/.y(): Define cómo obtener coordenadas X e Y de cada dato
+                    // .curve(): Define el tipo de interpolación (suavizado)
+                    const line = d3.line()
+                        .x(d => xScale1(new Date(d.date + '-01')))
+                        .y(d => yScale1(d.value))
+                        .curve(d3.curveMonotoneX);  // Suaviza la línea
+
+                createGrid(g1, xScale1, yScale1, dims1);
+
+                g1.append('path')
+                    .datum(lineData)
+                    .attr('fill', 'none')
+                    .attr('stroke', '#4a90e2')
+                    .attr('stroke-width', 3)
+                    .attr('d', line);
+
+                // Puntos
+                g1.selectAll('circle')
+                    .data(lineData)
+                    .enter()
+                    .append('circle')
+                    .attr('cx', d => xScale1(new Date(d.date + '-01')))
+                    .attr('cy', d => yScale1(d.value))
+                    .attr('r', 5)
+                    .style('fill', '#4a90e2')
+                    .style('stroke', 'white')
+                    .style('stroke-width', 2);
+
+                createAxes(g1, xScale1, yScale1, dims1, {
+                    xLabel: 'Fecha',
+                    yLabel: 'Valor',
+                    xFormat: d3.timeFormat('%b')
+                });
+
+                // Ejemplo 2: Gráfico de barras vertical
+                const barData = data.barChart;
+                if (!barData || barData.length === 0) {
+                    console.error('No hay datos para el gráfico de barras');
+                    return;
+                }
+                const { svg: svg2, g: g2, dims: dims2 } = createSVG('#chart2', 600, 400);
+
+                const xScale2 = d3.scaleBand()
+                    .domain(barData.map(d => d.category))
+                    .range([0, dims2.innerWidth])
+                    .padding(0.2);
+
+                const yScale2 = d3.scaleLinear()
+                    .domain([0, d3.max(barData, d => d.value)])
+                    .nice()
+                    .range([dims2.innerHeight, 0]);
+
+                createGrid(g2, xScale2, yScale2, dims2);
+
+                g2.selectAll('rect')
+                    .data(barData)
+                    .enter()
+                    .append('rect')
+                    .attr('x', d => xScale2(d.category))
+                    .attr('y', d => yScale2(d.value))
+                    .attr('width', xScale2.bandwidth())
+                    .attr('height', d => dims2.innerHeight - yScale2(d.value))
+                    .style('fill', (d, i) => D3Config.getColor(i));
+
+                createAxes(g2, xScale2, yScale2, dims2, {
+                    xLabel: 'Categorías',
+                    yLabel: 'Valores'
+                });
+
+                // Gráfico de barras horizontal
+                const { svg: svg2b, g: g2b, dims: dims2b } = createSVG('#chart2b', 600, 400);
+
+                const yScale2b = d3.scaleBand()
+                    .domain(barData.map(d => d.category))
+                    .range([0, dims2b.innerHeight])
+                    .padding(0.2);
+
+                const xScale2b = d3.scaleLinear()
+                    .domain([0, d3.max(barData, d => d.value)])
+                    .nice()
+                    .range([0, dims2b.innerWidth]);
+
+                createGrid(g2b, xScale2b, yScale2b, dims2b, { xLines: false });
+
+                g2b.selectAll('rect')
+                    .data(barData)
+                    .enter()
+                    .append('rect')
+                    .attr('x', 0)
+                    .attr('y', d => yScale2b(d.category))
+                    .attr('width', d => xScale2b(d.value))
+                    .attr('height', yScale2b.bandwidth())
+                    .style('fill', (d, i) => D3Config.getColor(i));
+
+                createAxes(g2b, xScale2b, yScale2b, dims2b, {
+                    xLabel: 'Valores',
+                    yLabel: 'Categorías'
+                });
+
+                // Ejemplo 3: Gráfico de área
+                const { svg: svg3, g: g3, dims: dims3 } = createSVG('#chart3', 700, 400);
+
+                const xScale3 = d3.scaleTime()
+                    .domain(d3.extent(lineData, d => new Date(d.date + '-01')))
+                    .range([0, dims3.innerWidth]);
+
+                const yScale3 = d3.scaleLinear()
+                    .domain([0, d3.max(lineData, d => d.value)])
+                    .nice()
+                    .range([dims3.innerHeight, 0]);
+
+                const area = d3.area()
+                    .x(d => xScale3(new Date(d.date + '-01')))
+                    .y0(dims3.innerHeight)
+                    .y1(d => yScale3(d.value))
+                    .curve(d3.curveMonotoneX);
+
+                createGrid(g3, xScale3, yScale3, dims3);
+
+                g3.append('path')
+                    .datum(lineData)
+                    .attr('fill', '#4a90e2')
+                    .attr('fill-opacity', 0.6)
+                    .attr('stroke', '#357abd')
+                    .attr('stroke-width', 2)
+                    .attr('d', area);
+
+                createAxes(g3, xScale3, yScale3, dims3, {
+                    xLabel: 'Fecha',
+                    yLabel: 'Valor',
+                    xFormat: d3.timeFormat('%b')
+                });
+
+                // Ejemplo 4: Gráfico de dispersión
+                const scatterData = data.scatterData;
+                if (!scatterData || scatterData.length === 0) {
+                    console.error('No hay datos para el gráfico de dispersión');
+                    return;
+                }
+                const { svg: svg4, g: g4, dims: dims4 } = createSVG('#chart4', 600, 400);
+
+                const xScale4 = d3.scaleLinear()
+                    .domain(d3.extent(scatterData, d => d.x))
+                    .nice()
+                    .range([0, dims4.innerWidth]);
+
+                const yScale4 = d3.scaleLinear()
+                    .domain(d3.extent(scatterData, d => d.y))
+                    .nice()
+                    .range([dims4.innerHeight, 0]);
+
+                const categories = [...new Set(scatterData.map(d => d.category))];
+                const colorScale4 = d3.scaleOrdinal()
+                    .domain(categories)
+                    .range(D3Config.colors.categorical);
+
+                createGrid(g4, xScale4, yScale4, dims4);
+
+                g4.selectAll('circle')
+                    .data(scatterData)
+                    .enter()
+                    .append('circle')
+                    .attr('cx', d => xScale4(d.x))
+                    .attr('cy', d => yScale4(d.y))
+                    .attr('r', 8)
+                    .style('fill', d => colorScale4(d.category))
+                    .style('opacity', 0.7)
+                    .style('stroke', 'white')
+                    .style('stroke-width', 2);
+
+                // Leyenda
+                const legend4 = g4.append('g')
+                    .attr('transform', `translate(${dims4.innerWidth - 100}, 20)`);
+
+                categories.forEach((cat, i) => {
+                    const legendItem = legend4.append('g')
+                        .attr('transform', `translate(0, ${i * 25})`);
+                    
+                    legendItem.append('circle')
+                        .attr('r', 6)
+                        .style('fill', colorScale4(cat));
+                    
+                    legendItem.append('text')
+                        .attr('x', 15)
+                        .attr('y', 5)
+                        .style('font-size', '12px')
+                        .text(cat);
+                });
+
+                createAxes(g4, xScale4, yScale4, dims4, {
+                    xLabel: 'Variable X',
+                    yLabel: 'Variable Y'
+                });
+
+                // Ejemplo 5: Gráfico circular (Pie)
+                const pieData = data.pieData;
+                if (!pieData || pieData.length === 0) {
+                    console.error('No hay datos para el gráfico circular');
+                    return;
+                }
+                const { svg: svg5, g: g5, dims: dims5 } = createSVG('#chart5', 500, 500);
+
+                const radius = Math.min(dims5.innerWidth, dims5.innerHeight) / 2 - 40;
+                const pie = d3.pie()
+                    .value(d => d.value)
+                    .sort(null);
+
+                const arc = d3.arc()
+                    .innerRadius(0)
+                    .outerRadius(radius);
+
+                const colorScale5 = d3.scaleOrdinal()
+                    .domain(pieData.map(d => d.label))
+                    .range(D3Config.colors.categorical);
+
+                g5.attr('transform', `translate(${dims5.innerWidth / 2}, ${dims5.innerHeight / 2})`);
+
+                const arcs = g5.selectAll('arc')
+                    .data(pie(pieData))
+                    .enter()
+                    .append('g')
+                    .attr('class', 'arc');
+
+                arcs.append('path')
+                    .attr('d', arc)
+                    .style('fill', d => colorScale5(d.data.label))
+                    .style('stroke', 'white')
+                    .style('stroke-width', 2)
+                    .on('mouseover', function(event, d) {
+                        d3.select(this).style('opacity', 0.7);
+                    })
+                    .on('mouseout', function() {
+                        d3.select(this).style('opacity', 1);
+                    });
+
+                // Etiquetas
+                arcs.append('text')
+                    .attr('transform', d => `translate(${arc.centroid(d)})`)
+                    .attr('text-anchor', 'middle')
+                    .style('font-size', '12px')
+                    .style('font-weight', 'bold')
+                    .text(d => d.data.value);
+
+                // Leyenda
+                const legend5 = g5.append('g')
+                    .attr('transform', `translate(${radius + 20}, ${-radius})`);
+
+                pieData.forEach((d, i) => {
+                    const legendItem = legend5.append('g')
+                        .attr('transform', `translate(0, ${i * 25})`);
+                    
+                    legendItem.append('rect')
+                        .attr('width', 15)
+                        .attr('height', 15)
+                        .style('fill', colorScale5(d.label));
+                    
+                    legendItem.append('text')
+                        .attr('x', 20)
+                        .attr('y', 12)
+                        .style('font-size', '12px')
+                        .text(`${d.label} (${d.value})`);
+                });
+
+                // Gráfico Donut
+                const { svg: svg5b, g: g5b, dims: dims5b } = createSVG('#chart5b', 500, 500);
+
+                const radius5b = Math.min(dims5b.innerWidth, dims5b.innerHeight) / 2 - 40;
+                const arc5b = d3.arc()
+                    .innerRadius(radius5b * 0.5)
+                    .outerRadius(radius5b);
+
+                g5b.attr('transform', `translate(${dims5b.innerWidth / 2}, ${dims5b.innerHeight / 2})`);
+
+                const arcs5b = g5b.selectAll('arc')
+                    .data(pie(pieData))
+                    .enter()
+                    .append('g')
+                    .attr('class', 'arc');
+
+                arcs5b.append('path')
+                    .attr('d', arc5b)
+                    .style('fill', d => colorScale5(d.data.label))
+                    .style('stroke', 'white')
+                    .style('stroke-width', 2);
+
+                // Texto central
+                g5b.append('text')
+                    .attr('text-anchor', 'middle')
+                    .attr('dy', '.35em')
+                    .style('font-size', '20px')
+                    .style('font-weight', 'bold')
+                    .text('Total');
+                })
+                .catch(error => {
+                    console.error('Error al cargar los datos:', error);
+                    // Mostrar mensaje de error en la página
+                    document.querySelectorAll('.chart-wrapper').forEach(wrapper => {
+                        wrapper.innerHTML = '<p style="color: red; padding: 20px;">Error al cargar los datos. Por favor, verifica que el servidor esté ejecutándose correctamente.</p>';
+                    });
+                });
+            });
+        </script>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,96 @@
+<!--
+    ============================================================================
+    ARCHIVO: index.html
+    ============================================================================
+    
+    PROPÓSITO:
+    Página principal del proyecto que sirve como índice y punto de entrada
+    para navegar a todos los ejemplos de gráficos D3.js.
+    
+    ESTRUCTURA:
+    - Header: Título y subtítulo del proyecto
+    - Navigation: Lista de enlaces a los 14 ejemplos
+    - Info: Sección informativa sobre el proyecto
+    
+    ESTILOS:
+    - Usa css/styles.css para todos los estilos
+    - Diseño responsive y moderno
+    
+    NAVEGACIÓN:
+    - Cada enlace lleva a un archivo HTML en la carpeta examples/
+    - Los archivos están numerados del 01 al 14 para mantener orden
+    
+    ============================================================================
+-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Metadatos básicos -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proyecto D3.js - Índice</title>
+    
+    <!-- Hoja de estilos principal -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Contenedor principal -->
+    <div class="container">
+        
+        <!-- ====================================================================
+             ENCABEZADO
+             ====================================================================
+             Muestra el título principal y una breve descripción del proyecto
+        -->
+        <header>
+            <h1>Proyecto de D3.js</h1>
+            <p class="subtitle">Visualización de datos avanzada con D3.js</p>
+        </header>
+
+        <!-- ====================================================================
+             NAVEGACIÓN PRINCIPAL
+             ====================================================================
+             Lista de todos los ejemplos disponibles, organizados por número
+             Cada ejemplo cubre un tipo diferente de gráfico o concepto
+        -->
+        <nav class="main-nav">
+            <h2>Navegación</h2>
+            <ul class="nav-list">
+                <!-- Ejemplos básicos y fundamentales -->
+                <li><a href="examples/01-introduction.html">1. Introducción a D3.js</a></li>
+                <li><a href="examples/02-advanced-customization.html">2. Personalización Avanzada</a></li>
+                
+                <!-- Gráficos especiales -->
+                <li><a href="examples/03-3d-charts.html">3. Gráficos 3D</a></li>
+                <li><a href="examples/04-interactive-charts.html">4. Gráficos Interactivos</a></li>
+                
+                <!-- Gráficos comunes y estándar -->
+                <li><a href="examples/05-common-charts.html">5. Gráficos Comunes</a></li>
+                <li><a href="examples/06-heatmap.html">6. Mapas de Calor</a></li>
+                <li><a href="examples/07-histogram.html">7. Histogramas</a></li>
+                <li><a href="examples/08-boxplot.html">8. Diagramas de Caja y Bigotes</a></li>
+                
+                <!-- Gráficos avanzados y especializados -->
+                <li><a href="examples/09-pareto.html">9. Gráficos de Pareto</a></li>
+                <li><a href="examples/10-radar.html">10. Gráficos de Radar</a></li>
+                <li><a href="examples/11-waterfall.html">11. Gráficos de Cascada</a></li>
+                <li><a href="examples/12-swarm.html">12. Gráficos de Enjambre</a></li>
+                <li><a href="examples/13-kde.html">13. Gráficos de Densidad KDE</a></li>
+                <li><a href="examples/14-sankey.html">14. Gráfico de Sankey</a></li>
+            </ul>
+        </nav>
+
+        <!-- ====================================================================
+             SECCIÓN INFORMATIVA
+             ====================================================================
+             Proporciona contexto sobre el proyecto y su propósito educativo
+        -->
+        <section class="info">
+            <h2>Acerca de este proyecto</h2>
+            <p>Este proyecto contiene ejemplos completos de visualización de datos usando D3.js, desde conceptos básicos hasta gráficos avanzados e interactivos.</p>
+            <p>Cada ejemplo incluye código comentado y explicaciones detalladas.</p>
+        </section>
+    </div>
+</body>
+</html>
+

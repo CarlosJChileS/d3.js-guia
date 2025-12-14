@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gráficos de Enjambre</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <div class="example-page">
+        <a href="../index.html" class="back-link">← Volver al índice</a>
+        
+        <div class="example-header">
+            <h1>12. Gráficos de Enjambre</h1>
+            <p>Distribución de puntos evitando colisiones usando force simulation</p>
+        </div>
+
+        <div class="chart-container">
+            <h2>Swarm Plot</h2>
+            <p>Puntos distribuidos verticalmente por categoría, evitando solapamientos.</p>
+            <div id="chart1" class="chart-wrapper"></div>
+        </div>
+
+        <script src="../js/config.js"></script>
+        <script src="../js/utils.js"></script>
+        <script src="../js/axes.js"></script>
+        <script>
+            // Esperar a que el DOM esté listo
+            document.addEventListener('DOMContentLoaded', function() {
+                // Verificar que D3 y las funciones estén disponibles
+                if (typeof d3 === 'undefined') {
+                    console.error('D3.js no está cargado');
+                    return;
+                }
+                if (typeof createSVG === 'undefined') {
+                    console.error('createSVG no está disponible');
+                    return;
+                }
+                if (typeof createAxes === 'undefined') {
+                    console.error('createAxes no está disponible');
+                    return;
+                }
+                if (typeof createGrid === 'undefined') {
+                    console.error('createGrid no está disponible');
+                    return;
+                }
+                if (typeof createGrid === 'undefined') {
+                    console.error('createGrid no está disponible');
+                    return;
+                }
+                if (typeof createTooltip === 'undefined') {
+                    console.error('createTooltip no está disponible');
+                    return;
+                }
+                if (typeof showTooltip === 'undefined') {
+                    console.error('showTooltip no está disponible');
+                    return;
+                }
+                if (typeof hideTooltip === 'undefined') {
+                    console.error('hideTooltip no está disponible');
+                    return;
+                }
+                
+                // Cargar datos
+                d3.json('../data/sample-data.json')
+                    .then(data => {
+                        if (!data) {
+                            console.error('No se pudieron cargar los datos');
+                            return;
+                        }
+                        
+                        let swarmData = data.swarmData;
+                        if (!swarmData || swarmData.length === 0) {
+                            console.error('No hay datos de enjambre');
+                            return;
+                        }
+                        
+                        // Generar más datos para hacer el gráfico más completo
+                        const categories = [...new Set(swarmData.map(d => d.category))];
+                        const expandedData = [];
+                        
+                        categories.forEach(cat => {
+                            const catData = swarmData.filter(d => d.category === cat);
+                            const values = catData.map(d => d.value);
+                            const mean = d3.mean(values);
+                            const std = d3.deviation(values) || 5;
+                            
+                            // Generar más puntos con distribución normal alrededor de la media
+                            for (let i = 0; i < 30; i++) {
+                                const value = mean + (Math.random() + Math.random() + Math.random() + Math.random() - 2) * std;
+                                expandedData.push({
+                                    category: cat,
+                                    value: Math.round(value * 10) / 10
+                                });
+                            }
+                        });
+                        
+                        swarmData = expandedData;
+                        console.log('Datos de enjambre expandidos:', swarmData.length, 'puntos');
+
+                        const { svg: svg1, g: g1, dims: dims1 } = createSVG('#chart1', 800, 600);
+
+                        const colorScale = d3.scaleOrdinal()
+                            .domain(categories)
+                            .range(D3Config.colors.categorical);
+
+                        const xScale = d3.scaleBand()
+                            .domain(categories)
+                            .range([0, dims1.innerWidth])
+                            .padding(0.2);
+
+                        const allValues = swarmData.map(d => d.value);
+                        const yScale = d3.scaleLinear()
+                            .domain(d3.extent(allValues))
+                            .nice()
+                            .range([dims1.innerHeight, 0]);
+
+                        // Grid
+                        createGrid(g1, xScale, yScale, dims1);
+
+                        // Preparar datos para force simulation
+                        const nodes = swarmData.map((d, i) => ({
+                            id: i,
+                            category: d.category,
+                            value: d.value,
+                            x: xScale(d.category) + xScale.bandwidth() / 2,
+                            y: yScale(d.value),
+                            radius: 5,
+                            originalRadius: 5
+                        }));
+
+                        // Dibujar puntos primero (inicialmente ocultos)
+                        const circles = g1.selectAll('circle')
+                            .data(nodes)
+                            .enter()
+                            .append('circle')
+                            .attr('cx', d => d.x)
+                            .attr('cy', d => d.y)
+                            .attr('r', 0)
+                            .style('fill', d => colorScale(d.category))
+                            .style('fill-opacity', 0.8)
+                            .style('stroke', 'white')
+                            .style('stroke-width', 1.5)
+                            .style('cursor', 'pointer');
+
+                        // Force simulation para evitar colisiones - más iteraciones para mejor distribución
+                        const simulation = d3.forceSimulation(nodes)
+                            .force('x', d3.forceX(d => xScale(d.category) + xScale.bandwidth() / 2).strength(0.7))
+                            .force('y', d3.forceY(d => yScale(d.value)).strength(0.4))
+                            .force('collision', d3.forceCollide().radius(d => d.radius + 2))
+                            .stop();
+
+                        // Ejecutar simulación inicial
+                        for (let i = 0; i < 200; ++i) simulation.tick();
+                        
+                        // Actualizar posiciones después de la simulación
+                        circles
+                            .attr('cx', d => d.x)
+                            .attr('cy', d => d.y);
+
+                        // Animar la aparición de los puntos
+                        circles
+                            .transition()
+                            .duration(500)
+                            .delay((d, i) => i * 2)
+                            .attr('r', d => d.radius)
+                            .on('end', function() {
+                                d3.select(this).style('filter', 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))');
+                            });
+                        
+                        // Agregar interactividad mejorada
+                        circles.on('mouseover', function(event, d) {
+                            d3.select(this)
+                                .transition()
+                                .duration(200)
+                                .attr('r', d.radius * 2)
+                                .style('fill-opacity', 1)
+                                .style('stroke-width', 3)
+                                .style('filter', 'drop-shadow(0 4px 8px rgba(0,0,0,0.4))');
+                            
+                            // Resaltar puntos de la misma categoría
+                            circles.style('opacity', node => {
+                                return node.category === d.category ? 1 : 0.3;
+                            });
+                        })
+                        .on('mouseout', function(event, d) {
+                            d3.select(this)
+                                .transition()
+                                .duration(200)
+                                .attr('r', d.radius)
+                                .style('fill-opacity', 0.8)
+                                .style('stroke-width', 1.5)
+                                .style('filter', 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))');
+                            
+                            // Restaurar opacidad de todos los puntos
+                            circles.style('opacity', 1);
+                        });
+
+                        // Líneas de referencia por categoría (mediana, media, Q1, Q3)
+                        categories.forEach(cat => {
+                            const catData = swarmData.filter(d => d.category === cat);
+                            const values = catData.map(d => d.value).sort((a, b) => a - b);
+                            const median = d3.median(values);
+                            const mean = d3.mean(values);
+                            const q1 = d3.quantile(values, 0.25);
+                            const q3 = d3.quantile(values, 0.75);
+                            const color = colorScale(cat);
+                            
+                            // Box (Q1 a Q3)
+                            g1.append('rect')
+                                .attr('x', xScale(cat))
+                                .attr('y', yScale(q3))
+                                .attr('width', xScale.bandwidth())
+                                .attr('height', yScale(q1) - yScale(q3))
+                                .style('fill', color)
+                                .style('fill-opacity', 0.1)
+                                .style('stroke', color)
+                                .style('stroke-width', 1)
+                                .style('stroke-dasharray', '3,3');
+                            
+                            // Mediana
+                            g1.append('line')
+                                .attr('x1', xScale(cat))
+                                .attr('x2', xScale(cat) + xScale.bandwidth())
+                                .attr('y1', yScale(median))
+                                .attr('y2', yScale(median))
+                                .style('stroke', color)
+                                .style('stroke-width', 2)
+                                .style('opacity', 0.6);
+                            
+                            // Media
+                            g1.append('line')
+                                .attr('x1', xScale(cat))
+                                .attr('x2', xScale(cat) + xScale.bandwidth())
+                                .attr('y1', yScale(mean))
+                                .attr('y2', yScale(mean))
+                                .style('stroke', color)
+                                .style('stroke-width', 1.5)
+                                .style('stroke-dasharray', '2,2')
+                                .style('opacity', 0.4);
+                        });
+
+                        // Ejes
+                        createAxes(g1, xScale, yScale, dims1, {
+                            xLabel: 'Categorías',
+                            yLabel: 'Valores'
+                        });
+
+                        // Leyenda mejorada con estadísticas
+                        const legend = g1.append('g')
+                            .attr('transform', `translate(${dims1.innerWidth - 180}, 20)`);
+
+                        categories.forEach((cat, i) => {
+                            const catData = swarmData.filter(d => d.category === cat);
+                            const values = catData.map(d => d.value);
+                            const count = values.length;
+                            const mean = d3.mean(values);
+                            const median = d3.median(values);
+                            
+                            const legendItem = legend.append('g')
+                                .attr('transform', `translate(0, ${i * 60})`);
+                            
+                            legendItem.append('circle')
+                                .attr('r', 7)
+                                .style('fill', colorScale(cat))
+                                .style('fill-opacity', 0.8)
+                                .style('stroke', 'white')
+                                .style('stroke-width', 2);
+                            
+                            legendItem.append('text')
+                                .attr('x', 15)
+                                .attr('y', 5)
+                                .style('font-size', '13px')
+                                .style('font-weight', 'bold')
+                                .text(cat);
+                            
+                            legendItem.append('text')
+                                .attr('x', 15)
+                                .attr('y', 18)
+                                .style('font-size', '10px')
+                                .style('fill', '#666')
+                                .text(`n=${count}`);
+                            
+                            legendItem.append('text')
+                                .attr('x', 15)
+                                .attr('y', 30)
+                                .style('font-size', '10px')
+                                .style('fill', '#666')
+                                .text(`μ=${d3.format('.1f')(mean)}`);
+                            
+                            legendItem.append('text')
+                                .attr('x', 15)
+                                .attr('y', 42)
+                                .style('font-size', '10px')
+                                .style('fill', '#666')
+                                .text(`med=${d3.format('.1f')(median)}`);
+                        });
+
+                        // Tooltip mejorado
+                        const tooltip = createTooltip('body');
+
+                        circles.on('mouseover', function(event, d) {
+                            const catData = swarmData.filter(data => data.category === d.category);
+                            const values = catData.map(data => data.value);
+                            
+                            // Calcular estadísticas manualmente si calculateStats no está disponible
+                            let stats;
+                            if (typeof calculateStats !== 'undefined') {
+                                stats = calculateStats(values);
+                            } else {
+                                const sorted = [...values].sort((a, b) => a - b);
+                                stats = {
+                                    mean: d3.mean(values),
+                                    median: d3.median(values),
+                                    std: d3.deviation(values) || 0
+                                };
+                            }
+                            
+                            showTooltip(tooltip, `
+                                <strong>Categoría:</strong> ${d.category}<br>
+                                <strong>Valor:</strong> ${d.value}<br>
+                                <strong>Media:</strong> ${d3.format('.2f')(stats.mean)}<br>
+                                <strong>Mediana:</strong> ${d3.format('.2f')(stats.median)}<br>
+                                <strong>Desv. Est.:</strong> ${d3.format('.2f')(stats.std)}
+                            `, event);
+                        })
+                        .on('mousemove', function(event) {
+                            showTooltip(tooltip, tooltip.html(), event);
+                        })
+                        .on('mouseout', function() {
+                            hideTooltip(tooltip);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error al cargar los datos:', error);
+                        console.error('Detalles del error:', error.message, error.stack);
+                        const errorMsg = error.message || 'Error desconocido';
+                        document.querySelectorAll('.chart-wrapper').forEach(wrapper => {
+                            wrapper.innerHTML = `
+                                <p style="color: red; padding: 20px;">
+                                    <strong>Error al cargar los datos:</strong><br>
+                                    ${errorMsg}<br><br>
+                                    <small>Por favor, verifica que:<br>
+                                    1. El servidor esté ejecutándose (http://localhost:8080)<br>
+                                    2. El archivo data/sample-data.json exista<br>
+                                    3. No haya problemas de CORS</small>
+                                </p>
+                            `;
+                        });
+                    });
+            });
+        </script>
+    </div>
+</body>
+</html>
+
