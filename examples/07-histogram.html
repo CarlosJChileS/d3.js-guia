@@ -104,9 +104,9 @@
 
                 const histogram1 = d3.histogram()
                     .domain(d3.extent(histogramData))
-                    .thresholds(20);
+                    .thresholds(10); // Reducir bins para mejor visualización
 
-                const bins1 = histogram1(histogramData);
+                const bins1 = histogram1(histogramData).filter(bin => bin.length > 0); // Filtrar bins vacíos
 
                 const xScale1 = d3.scaleLinear()
                     .domain([d3.min(histogramData), d3.max(histogramData)])
@@ -119,17 +119,56 @@
 
                 createGrid(g1, xScale1, yScale1, dims1);
 
-                g1.selectAll('rect')
+                // Crear tooltip
+                const tooltip1 = d3.select('body').append('div')
+                    .attr('class', 'tooltip')
+                    .style('opacity', 0)
+                    .style('position', 'absolute')
+                    .style('background', 'rgba(0, 0, 0, 0.8)')
+                    .style('color', 'white')
+                    .style('padding', '8px 12px')
+                    .style('border-radius', '4px')
+                    .style('font-size', '12px')
+                    .style('pointer-events', 'none');
+
+                const bars1 = g1.selectAll('rect')
                     .data(bins1)
                     .enter()
                     .append('rect')
                     .attr('x', d => xScale1(d.x0))
-                    .attr('y', d => yScale1(d.length))
-                    .attr('width', d => xScale1(d.x1) - xScale1(d.x0) - 1)
-                    .attr('height', d => dims1.innerHeight - yScale1(d.length))
+                    .attr('y', dims1.innerHeight) // Empezar desde abajo
+                    .attr('width', d => Math.max(1, xScale1(d.x1) - xScale1(d.x0) - 1))
+                    .attr('height', 0) // Altura inicial 0
                     .style('fill', '#4a90e2')
-                    .style('stroke', '#357abd')
-                    .style('stroke-width', 1);
+                    .style('stroke', '#2c5aa0')
+                    .style('stroke-width', 1.5)
+                    .style('cursor', 'pointer')
+                    .on('mouseover', function(event, d) {
+                        d3.select(this)
+                            .style('fill', '#2c5aa0')
+                            .style('stroke', '#1a3d6b');
+                        tooltip1.transition()
+                            .duration(200)
+                            .style('opacity', 1);
+                        tooltip1.html(`Rango: ${d.x0.toFixed(1)} - ${d.x1.toFixed(1)}<br/>Frecuencia: ${d.length}`)
+                            .style('left', (event.pageX + 10) + 'px')
+                            .style('top', (event.pageY - 10) + 'px');
+                    })
+                    .on('mouseout', function() {
+                        d3.select(this)
+                            .style('fill', '#4a90e2')
+                            .style('stroke', '#2c5aa0');
+                        tooltip1.transition()
+                            .duration(200)
+                            .style('opacity', 0);
+                    });
+
+                // Animación de entrada
+                bars1.transition()
+                    .duration(800)
+                    .delay((d, i) => i * 50)
+                    .attr('y', d => yScale1(d.length))
+                    .attr('height', d => dims1.innerHeight - yScale1(d.length));
 
                 createAxes(g1, xScale1, yScale1, dims1, {
                     xLabel: 'Valor',
@@ -141,9 +180,9 @@
 
                 const histogram2 = d3.histogram()
                     .domain(d3.extent(histogramData))
-                    .thresholds(20);
+                    .thresholds(10);
 
-                const bins2 = histogram2(histogramData);
+                const bins2 = histogram2(histogramData).filter(bin => bin.length > 0);
                 const total = histogramData.length;
 
                 // Normalizar: convertir a probabilidades
@@ -163,17 +202,56 @@
 
                 createGrid(g2, xScale2, yScale2, dims2);
 
-                g2.selectAll('rect')
+                // Crear tooltip
+                const tooltip2 = d3.select('body').append('div')
+                    .attr('class', 'tooltip')
+                    .style('opacity', 0)
+                    .style('position', 'absolute')
+                    .style('background', 'rgba(0, 0, 0, 0.8)')
+                    .style('color', 'white')
+                    .style('padding', '8px 12px')
+                    .style('border-radius', '4px')
+                    .style('font-size', '12px')
+                    .style('pointer-events', 'none');
+
+                const bars2 = g2.selectAll('rect')
                     .data(normalizedBins)
                     .enter()
                     .append('rect')
                     .attr('x', d => xScale2(d.x0))
-                    .attr('y', d => yScale2(d.probability))
-                    .attr('width', d => xScale2(d.x1) - xScale2(d.x0) - 1)
-                    .attr('height', d => dims2.innerHeight - yScale2(d.probability))
+                    .attr('y', dims2.innerHeight)
+                    .attr('width', d => Math.max(1, xScale2(d.x1) - xScale2(d.x0) - 1))
+                    .attr('height', 0)
                     .style('fill', '#50c878')
-                    .style('stroke', '#4caf50')
-                    .style('stroke-width', 1);
+                    .style('stroke', '#3da05a')
+                    .style('stroke-width', 1.5)
+                    .style('cursor', 'pointer')
+                    .on('mouseover', function(event, d) {
+                        d3.select(this)
+                            .style('fill', '#3da05a')
+                            .style('stroke', '#2d7a45');
+                        tooltip2.transition()
+                            .duration(200)
+                            .style('opacity', 1);
+                        tooltip2.html(`Rango: ${d.x0.toFixed(1)} - ${d.x1.toFixed(1)}<br/>Probabilidad: ${(d.probability * 100).toFixed(2)}%`)
+                            .style('left', (event.pageX + 10) + 'px')
+                            .style('top', (event.pageY - 10) + 'px');
+                    })
+                    .on('mouseout', function() {
+                        d3.select(this)
+                            .style('fill', '#50c878')
+                            .style('stroke', '#3da05a');
+                        tooltip2.transition()
+                            .duration(200)
+                            .style('opacity', 0);
+                    });
+
+                // Animación de entrada
+                bars2.transition()
+                    .duration(800)
+                    .delay((d, i) => i * 50)
+                    .attr('y', d => yScale2(d.probability))
+                    .attr('height', d => dims2.innerHeight - yScale2(d.probability));
 
                 createAxes(g2, xScale2, yScale2, dims2, {
                     xLabel: 'Valor',
@@ -186,16 +264,17 @@
 
                 const histogram3 = d3.histogram()
                     .domain(d3.extent(histogramData))
-                    .thresholds(20);
+                    .thresholds(10);
 
-                const bins3 = histogram3(histogramData);
+                const bins3 = histogram3(histogramData).filter(bin => bin.length > 0);
+                const total3 = histogramData.length;
                 let cumulative = 0;
                 const cumulativeBins = bins3.map(bin => {
                     cumulative += bin.length;
                     return {
                         ...bin,
                         cumulative: cumulative,
-                        cumulativePercent: cumulative / total
+                        cumulativePercent: cumulative / total3
                     };
                 });
 
@@ -203,11 +282,42 @@
                     .domain([d3.min(histogramData), d3.max(histogramData)])
                     .range([0, dims3.innerWidth]);
 
+                // Escala Y para la línea acumulativa (0-100%)
+                const maxCumulative = d3.max(cumulativeBins, d => d.cumulativePercent);
                 const yScale3 = d3.scaleLinear()
-                    .domain([0, 1])
+                    .domain([0, maxCumulative])
+                    .nice()
                     .range([dims3.innerHeight, 0]);
 
+                // Escala Y para las barras: mostrar frecuencias individuales normalizadas de forma más visible
+                // Usamos el 40% inferior del gráfico para las barras
+                const maxBinFreq = d3.max(bins3, d => d.length / total3);
+                const yScale3Bars = d3.scaleLinear()
+                    .domain([0, maxBinFreq])
+                    .range([dims3.innerHeight, dims3.innerHeight * 0.6]); // Usar el 40% inferior
+
                 createGrid(g3, xScale3, yScale3, dims3);
+
+                // Barras del histograma (fondo) - mostrando frecuencias individuales normalizadas
+                const bars3 = g3.selectAll('rect')
+                    .data(bins3)
+                    .enter()
+                    .append('rect')
+                    .attr('x', d => xScale3(d.x0))
+                    .attr('y', dims3.innerHeight)
+                    .attr('width', d => Math.max(1, xScale3(d.x1) - xScale3(d.x0) - 1))
+                    .attr('height', 0)
+                    .style('fill', '#4a90e2')
+                    .style('fill-opacity', 0.5)
+                    .style('stroke', '#2c5aa0')
+                    .style('stroke-width', 2);
+
+                // Animación de barras usando la escala de barras
+                bars3.transition()
+                    .duration(600)
+                    .delay((d, i) => i * 40)
+                    .attr('y', d => yScale3Bars(d.length / total3))
+                    .attr('height', d => dims3.innerHeight - yScale3Bars(d.length / total3));
 
                 // Línea acumulativa
                 const line3 = d3.line()
@@ -215,26 +325,39 @@
                     .y(d => yScale3(d.cumulativePercent))
                     .curve(d3.curveStepAfter);
 
-                g3.append('path')
+                const path3 = g3.append('path')
                     .datum(cumulativeBins)
                     .attr('fill', 'none')
                     .attr('stroke', '#f39c12')
                     .attr('stroke-width', 3)
+                    .attr('stroke-linecap', 'round')
+                    .attr('stroke-linejoin', 'round')
                     .attr('d', line3);
 
-                // Barras del histograma
-                g3.selectAll('rect')
-                    .data(bins3)
+                // Animación de la línea
+                const totalLength = path3.node().getTotalLength();
+                path3
+                    .attr('stroke-dasharray', totalLength + ' ' + totalLength)
+                    .attr('stroke-dashoffset', totalLength)
+                    .transition()
+                    .duration(1000)
+                    .attr('stroke-dashoffset', 0);
+
+                // Puntos en la línea acumulativa
+                g3.selectAll('circle')
+                    .data(cumulativeBins)
                     .enter()
-                    .append('rect')
-                    .attr('x', d => xScale3(d.x0))
-                    .attr('y', d => yScale3(d.length / total))
-                    .attr('width', d => xScale3(d.x1) - xScale3(d.x0) - 1)
-                    .attr('height', d => dims3.innerHeight - yScale3(d.length / total))
-                    .style('fill', '#4a90e2')
-                    .style('fill-opacity', 0.3)
-                    .style('stroke', '#357abd')
-                    .style('stroke-width', 1);
+                    .append('circle')
+                    .attr('cx', d => xScale3((d.x0 + d.x1) / 2))
+                    .attr('cy', d => yScale3(d.cumulativePercent))
+                    .attr('r', 0)
+                    .style('fill', '#f39c12')
+                    .style('stroke', 'white')
+                    .style('stroke-width', 2)
+                    .transition()
+                    .duration(300)
+                    .delay((d, i) => 1000 + i * 50)
+                    .attr('r', 4);
 
                 createAxes(g3, xScale3, yScale3, dims3, {
                     xLabel: 'Valor',
@@ -252,20 +375,20 @@
                 const allData4 = [...data4a, ...data4b, ...data4c];
                 const histogram4 = d3.histogram()
                     .domain(d3.extent(allData4))
-                    .thresholds(25);
+                    .thresholds(15);
 
-                const bins4a = histogram4(data4a);
-                const bins4b = histogram4(data4b);
-                const bins4c = histogram4(data4c);
+                const bins4a = histogram4(data4a).filter(bin => bin.length > 0);
+                const bins4b = histogram4(data4b).filter(bin => bin.length > 0);
+                const bins4c = histogram4(data4c).filter(bin => bin.length > 0);
 
                 const xScale4 = d3.scaleLinear()
                     .domain(d3.extent(allData4))
                     .range([0, dims4.innerWidth]);
 
                 const maxFreq = Math.max(
-                    d3.max(bins4a, d => d.length),
-                    d3.max(bins4b, d => d.length),
-                    d3.max(bins4c, d => d.length)
+                    d3.max(bins4a, d => d.length) || 0,
+                    d3.max(bins4b, d => d.length) || 0,
+                    d3.max(bins4c, d => d.length) || 0
                 );
 
                 const yScale4 = d3.scaleLinear()
@@ -275,49 +398,81 @@
 
                 createGrid(g4, xScale4, yScale4, dims4);
 
-                // Función para dibujar histograma
-                function drawHistogram(bins, color, opacity, offsetMultiplier) {
+                // Función para dibujar histograma con animación
+                function drawHistogram(bins, color, opacity, offsetMultiplier, delay) {
                     bins.forEach((bin, i) => {
+                        if (bin.length === 0) return;
+                        
                         const binWidth = xScale4(bin.x1) - xScale4(bin.x0);
                         const offset = offsetMultiplier * (binWidth / 3);
+                        const barWidth = binWidth / 3;
                         
-                        g4.append('rect')
+                        const bar = g4.append('rect')
                             .attr('class', `hist-${color.replace('#', '')}`)
                             .attr('x', xScale4(bin.x0) + offset)
-                            .attr('y', yScale4(bin.length))
-                            .attr('width', binWidth / 3)
-                            .attr('height', dims4.innerHeight - yScale4(bin.length))
+                            .attr('y', dims4.innerHeight)
+                            .attr('width', barWidth)
+                            .attr('height', 0)
                             .style('fill', color)
                             .style('fill-opacity', opacity)
                             .style('stroke', 'white')
-                            .style('stroke-width', 1);
+                            .style('stroke-width', 1.5)
+                            .style('cursor', 'pointer');
+                        
+                        // Animación
+                        bar.transition()
+                            .duration(600)
+                            .delay(delay + i * 30)
+                            .attr('y', yScale4(bin.length))
+                            .attr('height', dims4.innerHeight - yScale4(bin.length));
                     });
                 }
 
-                drawHistogram(bins4a, '#4a90e2', 0.7, 0);
-                drawHistogram(bins4b, '#50c878', 0.7, 1);
-                drawHistogram(bins4c, '#f39c12', 0.7, 2);
+                drawHistogram(bins4a, '#4a90e2', 0.8, 0, 0);
+                drawHistogram(bins4b, '#50c878', 0.8, 1, 200);
+                drawHistogram(bins4c, '#f39c12', 0.8, 2, 400);
 
-                // Leyenda
+                // Leyenda mejorada
                 const legend4 = g4.append('g')
-                    .attr('transform', `translate(${dims4.innerWidth - 150}, 20)`);
+                    .attr('class', 'legend')
+                    .attr('transform', `translate(${dims4.innerWidth - 160}, 20)`);
 
-                ['Distribución A', 'Distribución B', 'Distribución C'].forEach((label, i) => {
-                    const colors = ['#4a90e2', '#50c878', '#f39c12'];
+                const legendData = [
+                    { label: 'Distribución A', color: '#4a90e2' },
+                    { label: 'Distribución B', color: '#50c878' },
+                    { label: 'Distribución C', color: '#f39c12' }
+                ];
+
+                legendData.forEach((item, i) => {
                     const legendItem = legend4.append('g')
-                        .attr('transform', `translate(0, ${i * 25})`);
+                        .attr('transform', `translate(0, ${i * 28})`)
+                        .style('cursor', 'pointer')
+                        .on('mouseover', function() {
+                            d3.select(this).select('rect')
+                                .style('stroke', '#333')
+                                .style('stroke-width', 2);
+                        })
+                        .on('mouseout', function() {
+                            d3.select(this).select('rect')
+                                .style('stroke', 'none');
+                        });
                     
                     legendItem.append('rect')
-                        .attr('width', 15)
-                        .attr('height', 15)
-                        .style('fill', colors[i])
-                        .style('fill-opacity', 0.7);
+                        .attr('width', 18)
+                        .attr('height', 18)
+                        .attr('rx', 3)
+                        .style('fill', item.color)
+                        .style('fill-opacity', 0.8)
+                        .style('stroke', 'white')
+                        .style('stroke-width', 1.5);
                     
                     legendItem.append('text')
-                        .attr('x', 20)
-                        .attr('y', 12)
-                        .style('font-size', '12px')
-                        .text(label);
+                        .attr('x', 25)
+                        .attr('y', 14)
+                        .style('font-size', '13px')
+                        .style('font-weight', '500')
+                        .style('fill', '#333')
+                        .text(item.label);
                 });
 
                 createAxes(g4, xScale4, yScale4, dims4, {
